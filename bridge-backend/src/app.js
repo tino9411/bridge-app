@@ -27,6 +27,7 @@ app.use((req, res, next) => {
 // Use Routes
 app.use('/users', userRoutes);
 app.use('/projects', projectRoutes);
+app.use('tasks', taskRoutes);
 
 // Handling 404
 app.use((req, res, next) => {
@@ -47,3 +48,6 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
+
+// Rest of your Express app setup code...
+module.exports = app; // Export your Express app so that it can be required in your test files.

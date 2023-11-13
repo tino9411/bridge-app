@@ -37,3 +37,12 @@ exports.login = async (req, res) => {
         res.status(400).send(error);
     }
 };
+
+// Assuming the User model's password and tokens fields should not be returned in the profile.
+exports.getProfile = async (req, res) => {
+    // We don't want to send the password and tokens array back in the response
+    // So we make sure to remove them from the result
+    const { password, tokens, ...userWithoutSensitiveData } = req.user.toObject();
+
+    res.send(userWithoutSensitiveData);
+};

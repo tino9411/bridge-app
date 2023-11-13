@@ -1,31 +1,36 @@
-// Task model definition.
 const mongoose = require('mongoose');
-const { ObjectId } = mongoose.Schema.Types;
+const { Schema } = mongoose;
 
-const taskSchema = new mongoose.Schema({
-  project: {
-    type: ObjectId,
-    ref: 'Project',
-    required: true,
-  },
-  title: {
-    type: String,
-    required: true,
-    trim: true,
-  },
-  description: {
-    type: String,
-    required: false,
-    trim: true,
-  },
-  status: {
-    type: String,
-    required: true,
-    enum: ['open', 'in progress', 'completed'],
-    default: 'open',
-  },
-  // You can add deadline, assignee, priority, etc.
-}, { timestamps: true });
+const taskSchema = new Schema({
+    project: {
+        type: Schema.Types.ObjectId,
+        required: true,
+        ref: 'Project' // Reference to the Project model
+    },
+    title: {
+        type: String,
+        required: true,
+        trim: true
+    },
+    description: {
+        type: String,
+        trim: true
+    },
+    status: {
+        type: String,
+        enum: ['open', 'in progress', 'completed'],
+        default: 'open'
+    },
+    priority: {
+        type: String,
+        enum: ['low', 'medium', 'high'],
+        default: 'medium'
+    },
+    dueDate: {
+        type: Date,
+        default: null // You can set a default due date, if required
+    },
+}, { timestamps: true }); // Add createdAt and updatedAt fields
 
 const Task = mongoose.model('Task', taskSchema);
 module.exports = Task;
