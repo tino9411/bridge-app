@@ -11,10 +11,7 @@ app.use(express.json());
 
 // Connect to MongoDB (replace `db_url` with your actual database URL)
 // Database connection
-mongoose.connect(process.env.MONGODB_URI, { 
-  useNewUrlParser: true, 
-  useUnifiedTopology: true
-})
+mongoose.connect(process.env.MONGODB_URI)
 .then(() => console.log('Connected to MongoDB...'))
 .catch(err => console.error('Could not connect to MongoDB.', err));
 
@@ -45,9 +42,10 @@ app.use((error, req, res, next) => {
 
 // Start server
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+// In app.js
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(PORT, () => console.log(`Server listening on port ${PORT}!`));
+};
 
 // Rest of your Express app setup code...
 module.exports = app; // Export your Express app so that it can be required in your test files.

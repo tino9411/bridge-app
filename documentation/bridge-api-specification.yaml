@@ -4,7 +4,7 @@ info:
   description: The Bridge API allows for task management and collaboration.
   version: "1.0.0"
 servers:
-  - url: 'https://api.yourbridgeapp.com/'
+  - url: 'http://localhost:3000'
     description: Production server
 paths:
   /users/register:
