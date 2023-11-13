@@ -1,0 +1,241 @@
+openapi: 3.0.0
+info:
+  title: Bridge API
+  description: The Bridge API allows for task management and collaboration.
+  version: "1.0.0"
+servers:
+  - url: 'https://api.yourbridgeapp.com/'
+    description: Production server
+paths:
+  /users/register:
+    post:
+      summary: Register a new user
+      tags:
+        - Users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+      responses:
+        '201':
+          description: User registered successfully
+        '400':
+          description: Error in registration
+  /users/login:
+    post:
+      summary: Login a user
+      tags:
+        - Users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  format: password
+      responses:
+        '200':
+          description: User logged in successfully
+        '401':
+          description: Authentication failed
+  /users/profile:
+    get:
+      summary: Retrieve user profile information
+      tags:
+        - Users
+      responses:
+        '200':
+          description: User profile information retrieved successfully
+        '401':
+          description: Authentication required
+  /projects:
+    post:
+      summary: Create a new project
+      tags:
+        - Projects
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Project'
+      responses:
+        '201':
+          description: Project created successfully
+        '400':
+          description: Error creating project
+    get:
+      summary: List all projects
+      tags:
+        - Projects
+      responses:
+        '200':
+          description: A list of projects
+        '401':
+          description: Authentication required
+  /projects/{id}:
+    get:
+      summary: Get details of a specific project
+      tags:
+        - Projects
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+      responses:
+        '200':
+          description: Specific project details
+        '401':
+          description: Authentication required
+        '404':
+          description: Project not found
+    put:
+      summary: Update a specific project
+      tags:
+        - Projects
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Project'
+      responses:
+        '200':
+          description: Project updated successfully
+        '400':
+          description: Error updating project
+        '401':
+          description: Authentication required
+        '404':
+          description: Project not found
+    delete:
+      summary: Delete a specific project
+      tags:
+        - Projects
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+      responses:
+        '200':
+          description: Project deleted successfully
+        '401':
+          description: Authentication required
+        '404':
+          description: Project not found
+  /projects/{projectId}/tasks:
+    post:
+      summary: Add a new task to a project
+      tags:
+        - Tasks
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Task'
+      responses:
+        '201':
+          description: Task added successfully
+        '400':
+          description: Error adding task
+        '401':
+          description: Authentication required
+    get:
+      summary: List tasks within a project
+      tags:
+        - Tasks
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+      responses:
+        '200':
+          description: A list of tasks for the project
+        '401':
+          description: Authentication required
+  /projects/{projectId}/tasks/{taskId}:
+    put:
+      summary: Update a task within a project
+      tags:
+        - Tasks
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+        - $ref: '#/components/parameters/TaskId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Task'
+      responses:
+        '200':
+          description: Task updated successfully
+        '400':
+          description: Error updating task
+        '401':
+          description: Authentication required
+        '404':
+          description: Task not found
+    delete:
+      summary: Delete a task within a project
+      tags:
+        - Tasks
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+        - $ref: '#/components/parameters/TaskId'
+      responses:
+        '200':
+          description: Task deleted successfully
+        '401':
+          description: Authentication required
+        '404':
+          description: Task not found
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+    Project:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+    Task:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+          enum: [open, in_progress, completed]
+  parameters:
+    ProjectId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+    TaskId:
+      name: taskId
+      in: path
+      required: true
+      schema:
+        type: string
