@@ -5,7 +5,7 @@ require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 const supertest = require('supertest');
 const chai = require('chai');
 const mongoose = require('mongoose');
-const app = require('../../src/app'); // Adjust the path to where your `app.js` file is locatedconst User = require('../models/user'); // Adjust the path to your User model
+const app = require('../../src/server'); // Adjust the path to where your `app.js` file is locatedconst User = require('../models/user'); // Adjust the path to your User model
 const User = require('../../src/models/user'); // Make sure this path is correct
 const Project = require('../../src/models/project'); // Import the Project model, adjust path as necessary
 const Task = require('../../src/models/task'); // Adjust the path to your Task model
@@ -30,7 +30,8 @@ describe('Task Endpoints', function () {
         await request.post('/users/register').send({
             name: 'Test User',
             email: userProfileEmail,
-            password: 'password123'
+            password: 'password123',
+            role: 'projectManager'
         });
 
         const loginResponse = await request.post('/users/login').send({

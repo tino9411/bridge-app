@@ -1,6 +1,7 @@
 // taskController.js
 const Project = require('../models/project');
 const Task = require('../models/task');
+const User = require('../models/user');
 
 // Add a new task to a project
 exports.addTask = async (req, res) => {
@@ -70,11 +71,42 @@ exports.deleteTask = async (req, res) => {
             return res.status(404).json({ error: 'Task not found' });
         }
 
-        // No need to pull the task from the project as it should be automatically managed by Mongoose middleware if set up
+        // Remove the task from the project's task list
+        await Project.findByIdAndUpdate(
+            projectId,
+            { $pull: { tasks: taskId } },
+            { new: true }
+        );
         res.status(200).json({ message: 'Task deleted successfully', task: task._id });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 };
 
+exports.assignTask = async (req, res) => {
+    const { taskId } = req.params; // taskId comes from URL params
+    const { userId } = req.body; // userId should be provided in the body
+  
+    try {
+      const task = await Task.findByIdAndUpdate(
+        taskId,
+        { assignee: userId },
+        { new: true, runValidators: true }
+      ).populate('assignee'); // Assuming you have an assignee field in your Task model
+  
+      if (!task) {
+        return res.status(404).json({ error: 'Task not found' });
+      }
+  
+      // Optionally, you might want to ensure the user exists and can be assigned tasks
+      const user = await User.findById(userId);
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+  
+      res.status(200).json(task);
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  };
 

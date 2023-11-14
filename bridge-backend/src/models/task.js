@@ -26,6 +26,11 @@ const taskSchema = new Schema({
         enum: ['low', 'medium', 'high'],
         default: 'medium'
     },
+      assignee: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+      default: null
+    },
     dueDate: {
         type: Date,
         default: null // You can set a default due date, if required

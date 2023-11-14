@@ -5,7 +5,7 @@ require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
 const supertest = require('supertest');
 const chai = require('chai');
 const mongoose = require('mongoose');
-const app = require('../../src/app'); // Adjust the path to where your `app.js` file is located
+const app = require('../../src/server'); // Adjust the path to where your `app.js` file is located
 const User = require('../../src/models/user'); // Import the User model, adjust the path as necessary
 
 const expect = chai.expect;
