@@ -4,6 +4,9 @@ const userRoutes = require('./routes/userRoutes');
 const projectRoutes = require('./routes/projectRoutes');
 const taskRoutes = require('./routes/taskRoutes');
 
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
+
 const app = express();
 
 // Middleware for parsing request bodies
@@ -11,7 +14,8 @@ app.use(express.json());
 
 // Connect to MongoDB (replace `db_url` with your actual database URL)
 // Database connection
-mongoose.connect(process.env.MONGODB_URI)
+const dbUri = process.env.MONGODB_URI;
+mongoose.connect(dbUri)
 .then(() => console.log('Connected to MongoDB...'))
 .catch(err => console.error('Could not connect to MongoDB.', err));
 
@@ -24,7 +28,7 @@ app.use((req, res, next) => {
 // Use Routes
 app.use('/users', userRoutes);
 app.use('/projects', projectRoutes);
-app.use('tasks', taskRoutes);
+app.use('/projects', taskRoutes);
 
 // Handling 404
 app.use((req, res, next) => {

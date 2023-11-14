@@ -197,6 +197,50 @@ paths:
           description: Authentication required
         '404':
           description: Task not found
+
+  /users/requestPasswordReset:
+    post:
+      summary: Request password reset
+      tags:
+        - Users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+      responses:
+        '200':
+          description: Password reset email sent successfully
+        '404':
+          description: User not found
+
+  /users/resetPassword:
+    post:
+      summary: Reset password
+      tags:
+        - Users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token:
+                  type: string
+                newPassword:
+                  type: string
+                  format: password
+      responses:
+        '200':
+          description: Password reset successfully
+        '400':
+          description: Invalid or expired token
 components:
   schemas:
     User:
