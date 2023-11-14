@@ -79,4 +79,63 @@ describe('User Endpoints', function () {
             expect(res.body).to.have.property('email', userProfileEmail);
         });
     });
+    // Test for logout
+    describe('POST /users/logout', function () {
+      it('should log out a user', async function () {
+          const res = await request.post('/users/logout')
+              .set('Authorization', `Bearer ${userToken}`);
+
+          expect(res.status).to.equal(200);
+          expect(res.body).to.have.property('message', 'Logged out successfully');
+
+          // Test if the token is really invalidated
+          const profileRes = await request.get('/users/profile')
+              .set('Authorization', `Bearer ${userToken}`);
+
+          expect(profileRes.status).to.equal(401); // Should fail as token should be invalidated
+      });
+  });
+
+  // Test for password reset request
+  describe('POST /users/requestPasswordReset', function () {
+      it('should initiate a password reset process', async function () {
+          const res = await request.post('/users/requestPasswordReset').send({
+              email: userProfileEmail
+          });
+
+          expect(res.status).to.equal(200);
+          expect(res.body).to.have.property('message', 'Password reset email sent');
+      });
+  });
+
+  // Test for password reset
+  describe('POST /users/resetPassword', function () {
+    it('should reset the password and allow login with the new password', async function () {
+        // Request password reset (sends token to user's email in production)
+        const resetRequestRes = await request.post('/users/requestPasswordReset').send({
+            email: userProfileEmail
+        });
+        expect(resetRequestRes.status).to.equal(200);
+
+        // Directly retrieve the reset token from the database
+        const user = await User.findOne({ email: userProfileEmail });
+        const resetToken = user.passwordResetToken; // Assuming your model has this field
+
+        // Perform the password reset using the retrieved token
+        const newPassword = 'newPassword123';
+        const resetRes = await request.post('/users/resetPassword').send({
+            token: resetToken,
+            newPassword: newPassword
+        });
+        expect(resetRes.status).to.equal(200);
+
+        // Now, attempt to log in with the new password
+        const loginRes = await request.post('/users/login').send({
+            email: userProfileEmail,
+            password: newPassword
+        });
+        expect(loginRes.status).to.equal(200);
+        expect(loginRes.body).to.have.property('token');
+      });
+    });
 });

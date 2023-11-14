@@ -25,6 +25,12 @@ const userSchema = new mongoose.Schema({
       required: true
     }
   }],
+  passwordResetToken: {
+      type: String
+  },
+  passwordResetExpires: {
+      type: Date
+  },
   // Add additional user fields as needed
 });
 

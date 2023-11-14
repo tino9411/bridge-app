@@ -1,4 +1,5 @@
 const User = require('../models/user');
+const crypto = require('crypto');
 
 // Registration logic
 exports.register = async (req, res) => {
@@ -35,6 +36,67 @@ exports.login = async (req, res) => {
         res.send({ user, token });
     } catch (error) {
         res.status(400).send(error);
+    }
+};
+// Logout logic
+exports.logout = async (req, res) => {
+    try {
+        // Remove the token from the user's array of tokens
+        req.user.tokens = req.user.tokens.filter(token => token.token !== req.token);
+        await req.user.save();
+
+        res.send({ message: 'Logged out successfully' });
+    } catch (error) {
+        res.status(500).send({ error: error.message });
+    }
+};
+
+// Password reset request logic
+exports.requestPasswordReset = async (req, res) => {
+    try {
+        const user = await User.findOne({ email: req.body.email });
+        if (!user) {
+            // You might want to limit information here to prevent email enumeration
+            return res.status(404).send({ error: 'User not found' });
+        }
+
+        // Generate a password reset token
+        user.passwordResetToken = crypto.randomBytes(32).toString('hex');
+        user.passwordResetExpires = Date.now() + 3600000; // 1 hour from now
+        await user.save();
+
+        // Send the password reset token to the user's email
+        // Here, integrate with an email service to send the token
+        // sendPasswordResetEmail(user.email, user.passwordResetToken);
+
+        res.send({ message: 'Password reset email sent' });
+    } catch (error) {
+        res.status(500).send({ error: error.message });
+    }
+};
+
+// Password reset logic
+exports.resetPassword = async (req, res) => {
+    try {
+        const { token, newPassword } = req.body;
+        const user = await User.findOne({
+            passwordResetToken: token,
+            passwordResetExpires: { $gt: Date.now() }
+        });
+
+        if (!user) {
+            return res.status(400).send({ error: 'Token is invalid or has expired' });
+        }
+
+        // Set the new password and clear the reset token
+        user.password = newPassword;
+        user.passwordResetToken = undefined;
+        user.passwordResetExpires = undefined;
+        await user.save();
+
+        res.send({ message: 'Password has been reset successfully' });
+    } catch (error) {
+        res.status(500).send({ error: error.message });
     }
 };
 
