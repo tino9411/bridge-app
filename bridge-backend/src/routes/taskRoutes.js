@@ -5,11 +5,13 @@ const {
   getTasks,
   updateTask,
   deleteTask,
-  assignTask
+  assignTask,
 } = require('../controllers/taskController');
 const authMiddleware = require('../middlewares/auth');
 const checkProjectManagerRole = require('../middlewares/checkProjectManagerRole'); // Ensure this file exists and exports the middleware function
-
+const {
+    uploadFile
+} = require('../controllers/fileController');
 const router = express.Router();
 
 router.post('/:projectId/tasks', authMiddleware, checkProjectManagerRole, addTask);
@@ -17,6 +19,7 @@ router.post('/:projectId/tasks/:taskId/assign', authMiddleware, checkProjectMana
 router.get('/:projectId/tasks', authMiddleware, getTasks);
 router.put('/:projectId/tasks/:taskId', authMiddleware, checkProjectManagerRole, updateTask); // Added checkProjectManagerRole here as well
 router.delete('/:projectId/tasks/:taskId', authMiddleware, checkProjectManagerRole, deleteTask); // Added checkProjectManagerRole here as well
+router.post('/:projectId/tasks/:taskId/upload',authMiddleware, checkProjectManagerRole, uploadFile);
 
 module.exports = router;
 

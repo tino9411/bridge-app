@@ -41,6 +41,8 @@ paths:
                 password:
                   type: string
                   format: password
+      security:
+        - BearerAuth: []
       responses:
         '200':
           description: User logged in successfully
@@ -51,11 +53,26 @@ paths:
       summary: Retrieve user profile information
       tags:
         - Users
+      security:
+        - BearerAuth: []
       responses:
         '200':
           description: User profile information retrieved successfully
         '401':
           description: Authentication required
+  /users/logout:
+    post:
+      summary: Logout a user
+      tags:
+        - Users
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: User logged out successfully
+        '401':
+          description: Authentication required
+
   /projects:
     post:
       summary: Create a new project
@@ -76,6 +93,8 @@ paths:
       summary: List all projects
       tags:
         - Projects
+      security:
+        - BearerAuth: []
       responses:
         '200':
           description: A list of projects
@@ -86,6 +105,8 @@ paths:
       summary: Get details of a specific project
       tags:
         - Projects
+      security:
+        - BearerAuth: []
       parameters:
         - $ref: '#/components/parameters/ProjectId'
       responses:
@@ -99,6 +120,8 @@ paths:
       summary: Update a specific project
       tags:
         - Projects
+      security:
+        - BearerAuth: []
       parameters:
         - $ref: '#/components/parameters/ProjectId'
       requestBody:
@@ -134,8 +157,25 @@ paths:
       summary: Add a new task to a project
       tags:
         - Tasks
+      security:
+        - BearerAuth: []
       parameters:
         - $ref: '#/components/parameters/ProjectId'
+          Page:
+            name: page
+            in: query
+            required: false
+            schema:
+              type: integer
+              default: 1
+          Limit:
+            name: limit
+            in: query
+            required: false
+            schema:
+              type: integer
+              default: 10
+
       requestBody:
         required: true
         content:
@@ -153,6 +193,8 @@ paths:
       summary: List tasks within a project
       tags:
         - Tasks
+      security:
+        - BearerAuth: []
       parameters:
         - $ref: '#/components/parameters/ProjectId'
       responses:
@@ -165,6 +207,8 @@ paths:
       summary: Update a task within a project
       tags:
         - Tasks
+      security:
+        - BearerAuth: []
       parameters:
         - $ref: '#/components/parameters/ProjectId'
         - $ref: '#/components/parameters/TaskId'
@@ -187,6 +231,8 @@ paths:
       summary: Delete a task within a project
       tags:
         - Tasks
+      security:
+        - BearerAuth: []
       parameters:
         - $ref: '#/components/parameters/ProjectId'
         - $ref: '#/components/parameters/TaskId'
@@ -197,11 +243,78 @@ paths:
           description: Authentication required
         '404':
           description: Task not found
+  /projects/{projectId}/tasks/{taskId}/upload:
+    post:
+      summary: Upload a file to a specific task
+      tags:
+        - Files
+      security:
+        - BearerAuth: [] 
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+        - $ref: '#/components/parameters/TaskId'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '201':
+          description: File uploaded successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/File'
+        '400':
+          description: No file uploaded or error in file upload
+        '500':
+          description: Server error
+
+
+  /projects/{projectId}/tasks/{taskId}/assign:
+    post:
+      summary: Assign a task to a user
+      tags:
+        - Tasks
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+        - $ref: '#/components/parameters/TaskId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userId:
+                  type: string
+                  format: uuid
+      responses:
+        '200':
+          description: Task assigned successfully
+        '400':
+          description: Error in assigning task
+        '401':
+          description: Authentication required
+        '403':
+          description: Authorization required as project manager
+        '404':
+          description: Task or user not found
+
   /projects/{projectId}/details:
     patch:
       summary: Update project start date, end date, and budget details
       tags:
         - Projects
+      security:
+        - BearerAuth: []
       parameters:
         - $ref: '#/components/parameters/ProjectId'
       requestBody:
@@ -237,6 +350,8 @@ paths:
       summary: Add a phase to a project
       tags:
         - Phases
+      security:
+        - BearerAuth: []
       parameters:
         - $ref: '#/components/parameters/ProjectId'
       requestBody:
@@ -262,6 +377,8 @@ paths:
       summary: Get a specific phase of a project
       tags:
         - Phases
+      security:
+        - BearerAuth: []
       parameters:
         - $ref: '#/components/parameters/ProjectId'
         - name: phaseId
@@ -280,6 +397,8 @@ paths:
       summary: Update a specific phase of a project
       tags:
         - Phases
+      security:
+        - BearerAuth: []
       parameters:
         - $ref: '#/components/parameters/ProjectId'
         - name: phaseId
@@ -308,6 +427,8 @@ paths:
       summary: Delete a specific phase of a project
       tags:
         - Phases
+      security:
+        - BearerAuth: []
       parameters:
         - $ref: '#/components/parameters/ProjectId'
         - name: phaseId
@@ -325,13 +446,20 @@ paths:
         '404':
           description: Phase not found
 
-  /projects/{projectId}/milestones:
+  /projects/{projectId}/phases/{phaseId}/milestones:
     post:
       summary: Add a milestone to a project
       tags:
         - Milestones
+      security:
+        - BearerAuth: []
       parameters:
         - $ref: '#/components/parameters/ProjectId'
+        - name: phaseId
+          in: path
+          required: true
+          schema:
+            type: string
       requestBody:
         required: true
         content:
@@ -350,13 +478,20 @@ paths:
         '404':
           description: Project not found
 
-  /projects/{projectId}/milestones/{milestoneId}:
+  /projects/{projectId}/phases/{phaseId}/milestones:{milestoneId}:
     put:
       summary: Update a milestone within a project
       tags:
         - Milestones
+      security:
+        - BearerAuth: []
       parameters:
         - $ref: '#/components/parameters/ProjectId'
+        - name: phaseId
+          in: path
+          required: true
+          schema:
+            type: string
         - name: milestoneId
           in: path
           required: true
@@ -383,8 +518,15 @@ paths:
       summary: Delete a milestone from a project
       tags:
         - Milestones
+      security:
+        - BearerAuth: []
       parameters:
         - $ref: '#/components/parameters/ProjectId'
+        - name: phaseId
+          in: path
+          required: true
+          schema:
+            type: string
         - name: milestoneId
           in: path
           required: true
@@ -441,9 +583,90 @@ paths:
         '200':
           description: Password reset successfully
         '400':
-          description: Invalid or expired token       
+          description: Invalid or expired token
+  /files/{fileId}:
+    get:
+      summary: Retrieve details of a specific file
+      tags:
+        - Files
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: fileId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: File details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/File'
+        '404':
+          description: File not found
+        '500':
+          description: Server error
+    put:
+      summary: Update a specific file
+      tags:
+        - Files
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: fileId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: File updated successfully
+        '400':
+          description: No file uploaded or error in file upload
+        '404':
+          description: File not found
+        '500':
+          description: Server error
+    delete:
+      summary: Delete a specific file
+      tags:
+        - Files
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: fileId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: File deleted successfully
+        '404':
+          description: File not found
+        '500':
+          description: Server error
+
+
   
 components:
+  securitySchemes:
+      BearerAuth:
+        type: http
+        scheme: bearer
+        bearerFormat: JWT
   schemas:
     User:
       type: object
@@ -455,6 +678,9 @@ components:
           format: email
         password:
           type: string
+        role:
+          type: string
+          enum: ['user', 'projectManager', 'admin']
     Project:
       type: object
       required:
@@ -479,6 +705,8 @@ components:
           type: string
           format: date
           example: '2023-12-31'
+        budgetDetails:
+          $ref: '#/components/schemas/BudgetDetails'
 
     Phase:
       type: object
@@ -532,6 +760,18 @@ components:
         status:
           type: string
           enum: [open, in_progress, completed]
+        priority:
+          type: string
+          enum: ['low', 'medium', 'high']
+        assignee:
+          type: string
+          format: uuid
+        dueDate:
+          type: string
+          format: date
+        project:
+          type: string
+          format: uuid
           
     BudgetDetails:
       type: object
@@ -548,6 +788,16 @@ components:
           type: number
           format: double
           example: 90000.00
+    File:
+      type: object
+      properties:
+        filename:
+          type: string
+        filepath:
+          type: string
+        taskId:
+          type: string
+          format: uuid
   parameters:
     ProjectId:
       name: projectId
@@ -561,12 +811,22 @@ components:
       required: true
       schema:
         type: string
-
+    PhaseId:
+      name: taskId
+      in: path
+      required: true
+      schema:
+        type: string
     MilestoneId:
       name: milestoneId
       in: path
       required: true
       schema:
         type: string
-
+    FileId:
+      name: fileId
+      in: path
+      required: true
+      schema:
+        type: string
     
