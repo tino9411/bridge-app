@@ -1,7 +1,7 @@
 // config/corsOptions.js
 
 const allowedOrigins = [
-    'http://localhost:3001',  // Your front-end origin
+    'http://localhost:3003',  // Your front-end origin
   ];
   
   const corsOptions = {

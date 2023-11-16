@@ -1,3 +1,4 @@
+//file.js
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
 const fileSchema = new mongoose.Schema({
