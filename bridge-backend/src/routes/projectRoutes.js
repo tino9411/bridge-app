@@ -9,6 +9,7 @@ const {
     getProjectTasksWithAssignees,
     addPhaseToProject,
     getPhase,
+    getPhases,
     updatePhase,
     deletePhase,
     addMilestoneToProject,
@@ -39,6 +40,7 @@ router.delete('/:id', authMiddleware, checkProjectManagerRole, deleteProject);
 router.get('/:projectId/tasks-with-assignees', authMiddleware, getProjectTasksWithAssignees);
 
 // Routes for managing phases
+router.get('/:projectId/phases', authMiddleware,getPhases);
 router.post('/:projectId/phases', authMiddleware, checkProjectManagerRole, addPhaseToProject);
 router.get('/:projectId/phases/:phaseId', authMiddleware, getPhase);
 router.put('/:projectId/phases/:phaseId', authMiddleware, checkProjectManagerRole, updatePhase);

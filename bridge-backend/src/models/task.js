@@ -26,7 +26,12 @@ const taskSchema = new Schema({
         enum: ['low', 'medium', 'high'],
         default: 'medium'
     },
-      assignee: {
+    phase: {
+      type: Schema.Types.ObjectId,
+      ref: 'Phase', // Reference to a 'Phase' model
+      default: null
+    },
+    assignee: {
       type: Schema.Types.ObjectId,
       ref: 'User',
       default: null

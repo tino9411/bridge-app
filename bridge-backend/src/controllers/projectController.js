@@ -85,7 +85,6 @@ exports.updateProjectDetails = async (req, res) => {
     }
 };
 
-
 // Delete a specific project
 exports.deleteProject = async (req, res) => {
     try {
@@ -162,6 +161,18 @@ exports.addPhaseToProject = async (req, res) => {
       res.status(200).json(phase);
     } catch (error) {
       res.status(400).json({ error: error.message });
+    }
+  };
+  
+  exports.getPhases = async (req, res) => {
+    try {
+      const project = await Project.findById(req.params.projectId).populate('phases');
+      if (!project) {
+        return res.status(404).json({ error: 'Project not found' });
+      }
+      res.status(200).json(project.phases);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
     }
   };
   

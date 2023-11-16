@@ -1,5 +1,8 @@
+// server.js
 const express = require('express');
 const mongoose = require('mongoose');
+const cors = require('cors');
+const corsOptions = require('./config/corsOptions'); // Adjust the path if necessary
 const userRoutes = require('./routes/userRoutes');
 const projectRoutes = require('./routes/projectRoutes');
 const taskRoutes = require('./routes/taskRoutes');
@@ -8,6 +11,7 @@ const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
 
 const app = express();
+app.use(cors(corsOptions));
 
 // Middleware for parsing request bodies
 app.use(express.json());

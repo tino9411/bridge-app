@@ -81,7 +81,7 @@ paths:
           description: A list of projects
         '401':
           description: Authentication required
-  /projects/{id}:
+  /projects/{projectId}:
     get:
       summary: Get details of a specific project
       tags:
@@ -197,7 +197,208 @@ paths:
           description: Authentication required
         '404':
           description: Task not found
+  /projects/{projectId}/details:
+    patch:
+      summary: Update project start date, end date, and budget details
+      tags:
+        - Projects
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                startDate:
+                  type: string
+                  format: date
+                  example: '2023-01-01'
+                endDate:
+                  type: string
+                  format: date
+                  example: '2023-12-31'
+                budgetDetails:
+                  $ref: '#/components/schemas/BudgetDetails'
+      responses:
+        '200':
+          description: Project details updated successfully
+        '400':
+          description: Invalid input
+        '401':
+          description: Authentication required
+        '403':
+          description: Authorization required
+        '404':
+          description: Project not found
+  /projects/{projectId}/phases:
+    post:
+      summary: Add a phase to a project
+      tags:
+        - Phases
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Phase'
+      responses:
+        '201':
+          description: Phase added successfully
+        '400':
+          description: Error adding phase
+        '401':
+          description: Authentication required
+        '403':
+          description: Authorization required as project manager
+        '404':
+          description: Project not found
 
+  /projects/{projectId}/phases/{phaseId}:
+    get:
+      summary: Get a specific phase of a project
+      tags:
+        - Phases
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+        - name: phaseId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Specific phase details
+        '401':
+          description: Authentication required
+        '404':
+          description: Phase not found
+    put:
+      summary: Update a specific phase of a project
+      tags:
+        - Phases
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+        - name: phaseId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Phase'
+      responses:
+        '200':
+          description: Phase updated successfully
+        '400':
+          description: Error updating phase
+        '401':
+          description: Authentication required
+        '403':
+          description: Authorization required as project manager
+        '404':
+          description: Phase not found
+    delete:
+      summary: Delete a specific phase of a project
+      tags:
+        - Phases
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+        - name: phaseId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Phase deleted successfully
+        '401':
+          description: Authentication required
+        '403':
+          description: Authorization required as project manager
+        '404':
+          description: Phase not found
+
+  /projects/{projectId}/milestones:
+    post:
+      summary: Add a milestone to a project
+      tags:
+        - Milestones
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Milestone'
+      responses:
+        '201':
+          description: Milestone added successfully
+        '400':
+          description: Error adding milestone
+        '401':
+          description: Authentication required
+        '403':
+          description: Authorization required as project manager
+        '404':
+          description: Project not found
+
+  /projects/{projectId}/milestones/{milestoneId}:
+    put:
+      summary: Update a milestone within a project
+      tags:
+        - Milestones
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+        - name: milestoneId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Milestone'
+      responses:
+        '200':
+          description: Milestone updated successfully
+        '400':
+          description: Error updating milestone
+        '401':
+          description: Authentication required
+        '403':
+          description: Authorization required as project manager
+        '404':
+          description: Milestone not found
+    delete:
+      summary: Delete a milestone from a project
+      tags:
+        - Milestones
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+        - name: milestoneId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Milestone deleted successfully
+        '401':
+          description: Authentication required
+        '403':
+          description: Authorization required as project manager
+        '404':
+          description: Milestone not found 
   /users/requestPasswordReset:
     post:
       summary: Request password reset
@@ -240,7 +441,8 @@ paths:
         '200':
           description: Password reset successfully
         '400':
-          description: Invalid or expired token
+          description: Invalid or expired token       
+  
 components:
   schemas:
     User:
@@ -255,11 +457,71 @@ components:
           type: string
     Project:
       type: object
+      required:
+        - name
+        - projectManager
+        - startDate
+        - endDate
       properties:
         name:
           type: string
         description:
           type: string
+        projectManager:
+          type: string
+          format: uuid
+          description: The ID of the user who is the manager of this project
+        startDate:
+          type: string
+          format: date
+          example: '2023-01-01'
+        endDate:
+          type: string
+          format: date
+          example: '2023-12-31'
+
+    Phase:
+      type: object
+      required:
+        - name
+        - startDate
+        - endDate
+      properties:
+        name:
+          type: string
+        startDate:
+          type: string
+          format: date
+          example: '2023-01-01'
+        endDate:
+          type: string
+          format: date
+          example: '2023-12-31'
+        status:
+          type: string
+          enum: ['Not Started', 'In Progress', 'Completed']
+          default: 'Not Started'
+        milestones:
+          type: array
+          items:
+            $ref: '#/components/schemas/Milestone'
+
+    # Define the Milestone schema
+    Milestone:
+      type: object
+      required:
+        - title
+        - dueDate
+      properties:
+        title:
+          type: string
+        dueDate:
+          type: string
+          format: date
+          example: '2023-06-01'
+        completed:
+          type: boolean
+          default: false
     Task:
       type: object
       properties:
@@ -270,9 +532,25 @@ components:
         status:
           type: string
           enum: [open, in_progress, completed]
+          
+    BudgetDetails:
+      type: object
+      properties:
+        estimatedBudget:
+          type: number
+          format: double
+          example: 100000.00
+        currentSpend:
+          type: number
+          format: double
+          example: 50000.00
+        forecastCompletionBudget:
+          type: number
+          format: double
+          example: 90000.00
   parameters:
     ProjectId:
-      name: id
+      name: projectId
       in: path
       required: true
       schema:
@@ -283,3 +561,12 @@ components:
       required: true
       schema:
         type: string
+
+    MilestoneId:
+      name: milestoneId
+      in: path
+      required: true
+      schema:
+        type: string
+
+    

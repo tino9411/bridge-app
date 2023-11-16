@@ -9,14 +9,18 @@ const {
     resetPassword 
 } = require('../controllers/userController');
 const authMiddleware = require('../middlewares/auth');
+const cors = require('cors');
+// Optionally define CORS options
+
+const corsOptions = require('../config/corsOptions');
 
 const router = express.Router();
 
 // Registration route
-router.post('/register', register);
+router.post('/register', cors(corsOptions), register);
 
 // Login route
-router.post('/login', login);
+router.post('/login', cors(corsOptions), login);
 
 // Logout route - requires user to be authenticated
 router.post('/logout', authMiddleware, logout);
