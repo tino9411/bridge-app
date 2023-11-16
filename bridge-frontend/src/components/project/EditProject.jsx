@@ -15,14 +15,14 @@ const EditProject = () => {
   // Access the projectId from the URL parameters
   const { projectId } = useParams();
   // For navigation after successful edit
-  const history = useNavigate();
+  const navigate = useNavigate();
   // State for messages and errors
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
   // Fetch project details on component mount and when projectId changes
   useEffect(() => {
-    const fetchProjectDetails = async () => {
+    const fetchProject = async () => {
       try {
         const token = localStorage.getItem('token'); // Replace with your token retrieval method
         const response = await axios.get(`http://localhost:3000/projects/${projectId}`, {
@@ -31,12 +31,25 @@ const EditProject = () => {
           },
         });
         // Set the fetched project details to state
-        setProjectData(response.data);
+        const formatDate = (dateString) => {
+            const date = new Date(dateString);
+            return date.toISOString().split('T')[0];
+          };
+          
+          // Inside your useEffect hook, after fetching the data:
+          if (response.data.startDate) {
+            response.data.startDate = formatDate(response.data.startDate);
+          }
+          if (response.data.endDate) {
+            response.data.endDate = formatDate(response.data.endDate);
+          }
+          setProjectData(response.data);
+          
       } catch (err) {
         setError(err.response?.data?.error || 'Error fetching project details');
       }
     };
-    fetchProjectDetails();
+    fetchProject();
   }, [projectId]);
 
   // Update projectData state when form inputs change
@@ -58,7 +71,7 @@ const EditProject = () => {
       // If successful, set a success message
       setMessage('Project updated successfully');
       // Redirect or update UI after successful edit
-      history.push('/path-to-redirect');
+      navigate('/dashboard');
     } catch (err) {
       // If an error occurs, set an error message
       setError(err.response?.data?.error || 'Error updating project');
@@ -67,54 +80,75 @@ const EditProject = () => {
 
   // Form with input fields that are pre-filled with the current project data
   return (
-    <div>
+    
+    <div className="container my-4">
+      <button onClick={() => navigate('/dashboard')} className="btn btn-secondary mb-3">Back to Dashboard</button>
       <h2>Edit Project</h2>
-      <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          name="name"
-          placeholder="Project Name"
-          value={projectData.name}
-          onChange={handleChange}
-          required
-        />
-        <textarea
-          name="description"
-          placeholder="Project Description"
-          value={projectData.description}
-          onChange={handleChange}
-        />
-        <input
-          type="date"
-          name="startDate"
-          placeholder="Start Date"
-          value={projectData.startDate}
-          onChange={handleChange}
-          required
-        />
-        <input
-          type="date"
-          name="endDate"
-          placeholder="End Date"
-          value={projectData.endDate}
-          onChange={handleChange}
-          required
-        />
-        <input
-          type="number"
-          name="budget"
-          placeholder="Budget"
-          value={projectData.budget}
-          onChange={handleChange}
-          min="0"
-          step="0.01"
-        />
-        <button type="submit">Update Project</button>
+      <form onSubmit={handleSubmit} className="mb-3">
+        <div className="mb-3">
+          <input
+            type="text"
+            className="form-control"
+            name="name"
+            placeholder="Project Name"
+            value={projectData.name}
+            onChange={handleChange}
+            required
+          />
+        </div>
+
+        <div className="mb-3">
+          <textarea
+            className="form-control"
+            name="description"
+            placeholder="Project Description"
+            value={projectData.description}
+            onChange={handleChange}
+            rows="3"
+          />
+        </div>
+
+        <div className="mb-3">
+          <input
+            type="date"
+            className="form-control"
+            name="startDate"
+            value={projectData.startDate}
+            onChange={handleChange}
+            required
+          />
+        </div>
+
+        <div className="mb-3">
+          <input
+            type="date"
+            className="form-control"
+            name="endDate"
+            value={projectData.endDate}
+            onChange={handleChange}
+            required
+          />
+        </div>
+
+        <div className="mb-3">
+          <input
+            type="number"
+            className="form-control"
+            name="budget"
+            placeholder="Budget"
+            value={projectData.budget}
+            onChange={handleChange}
+            min="0"
+            step="0.01"
+          />
+        </div>
+
+        <button type="submit" className="btn btn-primary">Update Project</button>
       </form>
-      {/* Display message or error if any */}
-      {message && <p className="success">{message}</p>}
-      {error && <p className="error">{error}</p>}
+      {message && <p className="alert alert-success">{message}</p>}
+      {error && <p className="alert alert-danger">{error}</p>}
     </div>
+    
   );
 };
 

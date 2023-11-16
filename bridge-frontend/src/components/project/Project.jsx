@@ -1,9 +1,10 @@
-// ProjectDetails.jsx
+// Project.jsx
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
+import TaskList from '../task/TaskList';
 
-const ProjectDetails = () => {
+const Project = () => {
   // State to hold the project details
   const [project, setProject] = useState(null);
   // State to hold any errors
@@ -34,23 +35,27 @@ const ProjectDetails = () => {
 
   // Render the project details, or an error message if an error occurred
   return (
-    <div>
-      <h2>Project Details</h2>
-      {error && <p className="error">{error}</p>}
-      {/* Check if the project data is available before trying to access its properties */}
+    <div className="container my-4">
+      <Link to="/dashboard" className="btn btn-secondary mb-3">Back to Dashboard</Link>
+      <h2 className="mb-3">{project?.name}</h2>
+      {error && <p className="alert alert-danger">{error}</p>}
+
       {project && (
-        <>
-          <p>Name: {project.name}</p>
-          <p>Description: {project.description}</p>
-          <p>Start Date: {project.startDate}</p>
-          <p>End Date: {project.endDate}</p>
-          <p>Status: {project.status}</p>
-          <p>Budget: ${project.budget}</p>
-          {/* Add more details as needed */}
-        </>
+        <div className="card mb-3">
+          <div className="card-body">
+            <p><strong>Description:</strong> {project.description}</p>
+            <p><strong>Start Date:</strong> {project.startDate}</p>
+            <p><strong>End Date:</strong> {project.endDate}</p>
+            <p><strong>Status:</strong> {project.status}</p>
+            <p><strong>Budget:</strong> ${project.budget}</p>
+          </div>
+        </div>
       )}
+      <Link to={`/edit-project/${project?._id}`} className="btn btn-primary mb-3">Edit Project</Link>
+
+      <TaskList /> {/* Render TaskList component */}
     </div>
   );
 };
 
-export default ProjectDetails;
+export default Project;
