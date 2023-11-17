@@ -1,6 +1,7 @@
 const User = require('../models/user');
 const crypto = require('crypto');
 
+
 // Registration logic
 exports.register = async (req, res) => {
     try {
@@ -123,3 +124,30 @@ exports.getProfile = async (req, res) => {
 
     res.send(userWithoutSensitiveData);
 };
+
+exports.updateProfile = async (req, res) => {
+    try {
+      const user = req.user;
+      const updateFields = ['phoneNumber', 'secondaryEmail', 'skills', 'biography'];
+  
+      updateFields.forEach(field => {
+        if (req.body[field] !== undefined) {
+          user[field] = req.body[field];
+        }
+      });
+  
+      if (req.file) {
+        user.profileImage = req.file.path; // Save the path of the uploaded file
+      }
+
+      if (req.body.skills) {
+        user.skills = req.body.skills.split(',').map(skill => skill.trim());
+      }
+  
+      await user.save();
+      res.send({ message: 'Profile updated successfully', user });
+    } catch (error) {
+      res.status(500).send({ error: error.message });
+    }
+  };
+  

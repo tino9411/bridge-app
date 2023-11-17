@@ -46,7 +46,7 @@ const Sidebar = ({ onLogout }) => {
       <Dropdown as="ul" className="mb-3">
         <Dropdown.Toggle as="a" className="d-flex align-items-center text-white text-decoration-none">
           <img src="user_avatar.png" alt="" width="32" height="32" className="rounded-circle me-2"/>
-          <strong>mdo</strong>
+          <strong>User</strong>
         </Dropdown.Toggle>
 
         <Dropdown.Menu className="dropdown-menu-dark text-small shadow">

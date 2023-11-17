@@ -25,6 +25,27 @@ const userSchema = new mongoose.Schema({
     enum: ['user', 'projectManager', 'admin'],
     default: 'user'
   },
+  phoneNumber: {
+    type: String,
+    trim: true,
+    default: ''
+  },
+  secondaryEmail: {
+    type: String,
+    trim: true,
+    lowercase: true
+  },
+  skills: {
+    type: [String],
+    trim: true
+  },
+  biography: {
+    type: String,
+    trim: true
+  },
+  profileImage: {
+    type: String // This will store the path to the image file
+  },
   tokens: [{
     token: {
       type: String,
@@ -37,7 +58,7 @@ const userSchema = new mongoose.Schema({
   passwordResetExpires: {
       type: Date
   },
-  // Add additional user fields as needed
+  // Add additional user fields as needed here
 });
 
 // Hash the plain text password before saving

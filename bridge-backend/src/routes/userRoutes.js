@@ -7,16 +7,29 @@ const {
     logout,
     requestPasswordReset,
     resetPassword,
-    updatePassword 
+    updatePassword,
+    updateProfile
 } = require('../controllers/userController');
 const authMiddleware = require('../middlewares/auth');
 const cors = require('cors');
+const multer = require('multer');
 // Optionally define CORS options
 
 const corsOptions = require('../config/corsOptions');
 
 const router = express.Router();
 
+// Configure Multer
+const storage = multer.diskStorage({
+    destination: function(req, file, cb) {
+      cb(null, 'uploads/'); // The folder where files will be saved
+    },
+    filename: function(req, file, cb) {
+      cb(null, Date.now() + '-' + file.originalname); // Constructing the file name
+    }
+  });
+  
+  const upload = multer({ storage: storage });
 // Registration route
 router.post('/register', cors(corsOptions), register);
 
@@ -36,6 +49,9 @@ router.post('/requestPasswordReset', requestPasswordReset);
 router.post('/resetPassword', resetPassword);
 
 //Password update route
-router.post('/updatePassword', authMiddleware, updatePassword);
+router.post('/updatePassword', authMiddleware,updatePassword);
+
+//Update profile route
+router.post('/updateProfile', authMiddleware, upload.single('profileImage'), updateProfile);
 
 module.exports = router;
