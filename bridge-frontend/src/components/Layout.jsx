@@ -1,12 +1,11 @@
 import React from 'react';
 import Sidebar from './Sidebar';
-import './Layout.css'; // Add this import
+import './Layout.css';
 
-
-const Layout = ({ children }) => {
+const Layout = ({ children, isAuthenticated, onLogout }) => {
   return (
     <div className="d-flex">
-      <Sidebar />
+      {isAuthenticated && <Sidebar onLogout={onLogout} />}
       <main className="flex-grow-1">
         {children}
       </main>

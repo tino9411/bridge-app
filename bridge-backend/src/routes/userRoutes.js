@@ -6,7 +6,8 @@ const {
     getProfile,
     logout,
     requestPasswordReset,
-    resetPassword 
+    resetPassword,
+    updatePassword 
 } = require('../controllers/userController');
 const authMiddleware = require('../middlewares/auth');
 const cors = require('cors');
@@ -33,5 +34,8 @@ router.post('/requestPasswordReset', requestPasswordReset);
 
 // Password reset route
 router.post('/resetPassword', resetPassword);
+
+//Password update route
+router.post('/updatePassword', authMiddleware, updatePassword);
 
 module.exports = router;

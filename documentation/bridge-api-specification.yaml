@@ -72,7 +72,28 @@ paths:
           description: User logged out successfully
         '401':
           description: Authentication required
-
+  /users/updatePassword:
+    post:
+      summary: Change the user's password.
+      tags:
+        - Users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                password:
+                  type: string
+                  format: password
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Password changed successfully
+        '401':
+          description: Authentication failed
   /projects:
     post:
       summary: Create a new project

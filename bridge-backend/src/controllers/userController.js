@@ -76,7 +76,7 @@ exports.requestPasswordReset = async (req, res) => {
 };
 
 // Password reset logic
-exports.resetPassword = async (req, res) => {
+exports.resetPassword = async (req, res) => {s
     try {
         const { token, newPassword } = req.body;
         const user = await User.findOne({
@@ -95,6 +95,21 @@ exports.resetPassword = async (req, res) => {
         await user.save();
 
         res.send({ message: 'Password has been reset successfully' });
+    } catch (error) {
+        res.status(500).send({ error: error.message });
+    }
+};
+
+exports.updatePassword = async (req, res) => {
+    try {
+        const user = req.user;
+        const { newPassword } = req.body;
+
+        // Update the user's password
+        user.password = newPassword;
+        await user.save();
+
+        res.send({ message: 'Password updated successfully' });
     } catch (error) {
         res.status(500).send({ error: error.message });
     }
