@@ -2,11 +2,27 @@ import React, { useState } from "react";
 import axios from "axios";
 import "./TaskCard.css";
 
-const Task = ({ task, onDelete, onComplete, onEdit }) => {
+const TaskCard = ({ task, onDelete, onComplete, onEdit, onClick }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editFormData, setEditFormData] = useState({ ...task });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+const formatDate = (isoDate) => {
+    const date = new Date(isoDate);
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear().toString();
+    return `${day}-${month}-${year}`;
+};
+
+  // Update the task object with formatted dates
+  task = {
+    ...task,
+    dueDate: formatDate(task.dueDate),
+    createdAt: formatDate(task.createdAt),
+    updatedAt: formatDate(task.updatedAt)
+  };
 
   const handleDelete = async () => {
     if (!window.confirm("Are you sure you want to delete this task?")) return;
@@ -175,35 +191,50 @@ const Task = ({ task, onDelete, onComplete, onEdit }) => {
   };
 
   const renderDefaultView = () => (
-    <div className="task-card">
+    <div className="task-card" onClick={onClick}>
       <div className="task-header">
         <h5 className="task-title">{task.title}</h5>
       </div>
       <div className="task-body">
         <p>Assigned to: {task.assignee}</p>
-        <p>Rate: {task.rate}</p>
         <p>Phase: {task.phase}</p>
-        <div className="task-metadata">
-          <span className="task-date">Due Date: {task.dueDate}</span>
-          <span className="task-date">Created: {task.createdAt}</span>
-          <span className="task-date">Updated: {task.updatedAt}</span>
-        </div>
+        <p>Rate: {task.rate}</p>
+        <p>Project ID: {task.project}</p>
+        <p>Comments: </p>
+        <p>Number of Assignees:</p>
+        <span className="task-date">Due Date: {task.dueDate}</span>
+        <span className="task-date">Created at: {task.createdAt}</span>
+        <span className="task-date">Updated at: {task.updatedAt}</span>
+    
         <div className="task-actions">
-        <button onClick={() => onEdit(task)} className="task-action-button task-action-button-edit">
-          <i className="fas fa-pencil-alt"></i>
-        </button>
-        <button onClick={() => onComplete(task)} className="task-action-button task-action-button-complete">
-          <i className="fas fa-check"></i>
-        </button>
-        <button onClick={() => onDelete(task)} className="task-action-button task-action-button-delete">
-          <i className="fas fa-times"></i>
-        </button>
+          <button
+            onClick={() => handleEditClick(task)}
+            className="task-action-button task-action-button-edit"
+          >
+            <i className="fas fa-pencil-alt"></i>
+          </button>
+          <button
+            onClick={() => handleComplete(task)}
+            className="task-action-button task-action-button-complete"
+          >
+            <i className="fas fa-check"></i>
+          </button>
+          <button
+            onClick={() => handleDelete(task)}
+            className="task-action-button task-action-button-delete"
+          >
+            <i className="fas fa-times"></i>
+          </button>
+        </div>
       </div>
-      </div>
-      
+
       <div className="task-footer">
-        <span className={`task-status-badge ${task.status.toLowerCase()}`}>{task.status}</span>
-        <span className={`task-priority-badge ${task.priority.toLowerCase()}`}>{task.priority}</span>
+        <span className={`task-status-badge ${task.status.toLowerCase()}`}>
+          {task.status}
+        </span>
+        <span className={`task-priority-badge ${task.priority.toLowerCase()}`}>
+          {task.priority}
+        </span>
       </div>
     </div>
   );
@@ -211,4 +242,4 @@ const Task = ({ task, onDelete, onComplete, onEdit }) => {
   return isEditing ? renderEditView() : renderDefaultView();
 };
 
-export default Task;
+export default TaskCard;

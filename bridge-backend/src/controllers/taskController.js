@@ -30,7 +30,8 @@ exports.addTask = async (req, res) => {
 exports.getTasks = async (req, res) => {
     try {
         const { projectId } = req.params;
-        const tasks = await Task.find({ project: projectId });
+        // Update this line to populate 'project' and 'assignee' fields
+        const tasks = await Task.find({ project: projectId }).populate('project', 'name').populate('assignee', ['name', 'email', 'phoneNumber']);
         res.status(200).json(tasks);
     } catch (error) {
         res.status(500).json({ error: error.message });

@@ -1,8 +1,10 @@
+//TaskList.jsx
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useParams } from "react-router-dom";
-import Task from "./Task";
+import TaskCard from "./TaskCard";
 import './TaskList.css';
+import TaskModal from "./TaskModal";
 
 const TaskList = () => {
   const [tasks, setTasks] = useState([]);
@@ -73,23 +75,36 @@ const TaskList = () => {
 
   };
 
+
+  const [selectedTask, setSelectedTask] = useState(null);
+
+    const handleTaskClick = (task) => {
+        setSelectedTask(task); // When a task is clicked, set it as the selected task
+    };
+
+    const handleCloseModal = () => {
+        setSelectedTask(null); // To close the modal, clear the selected task
+    };
+
   if (isLoading) return <div>Loading tasks...</div>;
 
   if (error) return <div className="alert alert-danger">{error}</div>;
 
   return (
     <div className="task-list-container">
-    <div className="task-card-container">
-      {tasks.map((task) => (
-        <Task
-          key={task._id}
-          task={task}
-          onDelete={handleDelete}
-          onComplete={handleComplete}
-          onEdit={handleEdit}
-        />
-      ))}
-     </div> 
+      <div className="task-card-container">
+        {tasks.map((task) => (
+          <TaskCard
+            key={task._id}
+            task={task}
+            onClick={() => handleTaskClick(task)} // Add this line to handle clicking
+            onDelete={handleDelete}
+            onComplete={handleComplete}
+            onEdit={handleEdit}
+          />
+        ))}
+      </div>
+      <TaskModal task={selectedTask} onClose={handleCloseModal} />
     </div>
   );
 };

@@ -31,6 +31,10 @@ const taskSchema = new Schema({
       ref: 'Phase', // Reference to a 'Phase' model
       default: null
     },
+    skillsNeeded: [{
+        type: String,
+        trim: true
+        }],
     assignee: {
       type: Schema.Types.ObjectId,
       ref: 'User',
