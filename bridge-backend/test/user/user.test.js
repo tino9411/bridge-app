@@ -38,7 +38,8 @@ describe('User Endpoints', function () {
             const res = await request.post('/users/register').send({
                 name: 'Test User',
                 email: userProfileEmail,
-                password: 'password123'
+                password: 'password123',
+                role: 'projectManager'
             });
 
             expect(res.status).to.equal(201);

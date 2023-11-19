@@ -15,7 +15,8 @@ const {
     deletePhase,
     addMilestoneToProject,
     updateMilestone,
-    deleteMilestone
+    deleteMilestone,
+    getProjectsWithTaskCount
   } = require('../controllers/projectController');
 const authMiddleware = require('../middlewares/auth');
 const checkProjectManagerRole = require('../middlewares/checkProjectManagerRole'); // Ensure you have this middleware to check for the project manager role
@@ -39,6 +40,9 @@ router.delete('/:id', authMiddleware, checkProjectManagerRole, deleteProject);
 
 // Route to get tasks with assignees for a specific project
 router.get('/:projectId/tasks-with-assignees', authMiddleware, getProjectTasksWithAssignees);
+
+// Route to get all projects with task count
+router.get('/projects-with-task-count', authMiddleware, getProjectsWithTaskCount);
 
 // Routes for managing phases
 router.get('/:projectId/phases', authMiddleware,getPhases);

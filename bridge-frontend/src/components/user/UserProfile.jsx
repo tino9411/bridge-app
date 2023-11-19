@@ -139,210 +139,80 @@ const UserProfile = () => {
   const displayValue = (value) => value || "";
 
   return (
-    <div className="container mt-5" style={{ overflow: "auto" }}>
-      <h2>Profile</h2>
-      {error && <div className="alert alert-danger">{error}</div>}
-      <div className="card card-body">
-        {isEditMode ? (
-          // Edit Mode
-          <form onSubmit={handleUpdateProfile}>
-            <div className="mb-3">
-              {user.profileImage && (
-                <img src={user.profileImage} alt="Profile" />
+  <div className="container mt-5">
+    <div className="row">
+      <div className="col-md-4 mb-3">
+        <div className="card">
+        <img src={user.profileImage || 'placeholder-profile.png'} alt="Profile" className="img-fluid rounded-circle mb-3" />
+            {isEditMode && (
+              <div className="mb-3">
+                <input type="file" className="form-control" id="profileImage" onChange={handleImageChange} />
+              </div>
+            )}
+          <div className="card-body">
+            <h5 className="card-title">{user.name}</h5>
+            <p className="card-text">{user.email}</p>
+            <p className="card-text"><small className="text-muted">{user.role}</small></p>
+            <div className="d-grid gap-2">
+              <button onClick={toggleEditMode} className="btn btn-primary">{isEditMode ? 'Save Profile' : 'Edit Profile'}</button>
+              <button onClick={handleLogout} className="btn btn-outline-secondary">Logout</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="col-md-8">
+        <div className="card">
+          <div className="card-body">
+            <form onSubmit={isEditMode ? handleUpdateProfile : handlePasswordChange}>
+              {/* Editable fields */}
+              <div className="mb-3">
+                <label htmlFor="phoneNumber" className="form-label">Phone Number</label>
+                <input type="tel" className="form-control" id="phoneNumber" name="phoneNumber" value={user.phoneNumber} onChange={handleInputChange} disabled={!isEditMode} />
+              </div>
+              <div className="mb-3">
+                <label htmlFor="secondaryEmail" className="form-label">Secondary Email</label>
+                <input type="email" className="form-control" id="secondaryEmail" name="secondaryEmail" value={user.secondaryEmail} onChange={handleInputChange} disabled={!isEditMode} />
+              </div>
+              <div className="mb-3">
+                <label htmlFor="skills" className="form-label">Skills</label>
+                <div className="d-flex flex-wrap gap-2">
+                  {user.skills.map((skill, index) => (
+                    <span key={index} className="badge bg-secondary">
+                      {skill}
+                      {isEditMode && <button type="button" className="btn-close ms-2" onClick={() => removeSkill(skill)} aria-label="Close"></button>}
+                    </span>
+                  ))}
+                  {isEditMode && (
+                    <input type="text" className="form-control" id="skills" placeholder="Add skill" onKeyPress={handleSkillInputChange} />
+                  )}
+                </div>
+              </div>
+              <div className="mb-3">
+                <label htmlFor="biography" className="form-label">Biography</label>
+                <textarea className="form-control" id="biography" name="biography" value={user.biography} onChange={handleInputChange} disabled={!isEditMode}></textarea>
+              </div>
+              {!isEditMode && (
+                <>
+                  <div className="mb-3">
+                    <label htmlFor="newPassword" className="form-label">New Password</label>
+                    <input type="password" className="form-control" id="newPassword" value={newPassword} onChange={e => setNewPassword(e.target.value)} required />
+                  </div>
+                  <div className="mb-3">
+                    <label htmlFor="confirmPassword" className="form-label">Confirm New Password</label>
+                    <input type="password" className="form-control" id="confirmPassword" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} required />
+                  </div>
+                  <button type="submit" className="btn btn-primary">Update Password</button>
+                </>
               )}
-              <label htmlFor="profileImage" className="form-label">
-                Profile Picture
-              </label>
-              <input
-                type="file"
-                className="form-control"
-                id="profileImage"
-                onChange={handleImageChange}
-              />
-            </div>
-
-            <div className="mb-3">
-              <label htmlFor="name" className="form-label">
-                Name
-              </label>
-              <input
-                type="text"
-                className="form-control"
-                id="name"
-                name="name"
-                value={user.name}
-                onChange={handleInputChange}
-              />
-            </div>
-
-            <div className="mb-3">
-              <label htmlFor="phoneNumber" className="form-label">
-                Phone Number
-              </label>
-              <input
-                type="text"
-                className="form-control"
-                id="phoneNumber"
-                name="phoneNumber"
-                value={user.phoneNumber}
-                onChange={handleInputChange}
-              />
-            </div>
-
-            <div className="mb-3">
-              <label htmlFor="secondaryEmail" className="form-label">
-                Secondary Email
-              </label>
-              <input
-                type="email"
-                className="form-control"
-                id="secondaryEmail"
-                name="secondaryEmail"
-                value={user.secondaryEmail}
-                onChange={handleInputChange}
-              />
-            </div>
-
-            <div className="mb-3">
-              <label htmlFor="skills" className="form-label">
-                Skills and Expertise
-              </label>
-              <div className="d-flex flex-wrap gap-2">
-                {newSkills.map((skill, index) => (
-                  <span key={index} className="badge bg-secondary">
-                    {skill}
-                    <button
-                      type="button"
-                      className="btn-close btn-close-white ms-2"
-                      onClick={() => removeSkill(skill)}
-                      aria-label="Remove"
-                    ></button>
-                  </span>
-                ))}
-              </div>
-              <input
-                type="text"
-                className="form-control mt-2"
-                id="skills"
-                placeholder="Enter skill and press Enter"
-                onKeyDown={handleSkillInputChange}
-              />
-            </div>
-
-            <div className="mb-3">
-              <label htmlFor="biography" className="form-label">
-                Biography
-              </label>
-              <textarea
-                className="form-control"
-                id="biography"
-                name="biography"
-                value={user.biography}
-                onChange={handleInputChange}
-              ></textarea>
-            </div>
-
-            <button type="submit" className="btn btn-primary">
-              Save Changes
-            </button>
-          </form>
-        ) : (
-          // View Mode
-          <>
-            {user.profileImage && <img src={user.profileImage} alt="Profile" />}
-            <p>
-              <strong>Name:</strong> {displayValue(user.name)}
-            </p>
-            <p>
-              <strong>Email:</strong> {displayValue(user.email)}
-            </p>
-            <p>
-              <strong>Role:</strong> {displayValue(user.role)}
-            </p>
-            <p>
-              <strong>Phone Number:</strong> {displayValue(user.phoneNumber)}
-            </p>
-            <p>
-              <strong>Secondary Email:</strong>{" "}
-              {displayValue(user.secondaryEmail)}
-            </p>
-            <p>
-              <strong>Skills:</strong> {displayValue(user.skills)}
-            </p>
-            <p>
-              <strong>Biography:</strong> {displayValue(user.biography)}
-            </p>
-            <button onClick={toggleEditMode} className="btn btn-secondary">
-              Edit Profile
-            </button>
-          </>
-        )}
-
-        <hr />
-
-        {/* Password Change Form */}
-        <div>
-          <form onSubmit={handlePasswordChange}>
-            <div className="mb-3">
-              <label htmlFor="newPassword" className="form-label">
-                New Password
-              </label>
-              <div className="input-group">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  className="form-control"
-                  id="newPassword"
-                  placeholder="Enter new password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  required
-                />
-                <button
-                  type="button"
-                  className="btn btn-outline-secondary"
-                  onClick={togglePasswordVisibility}
-                >
-                  {showPassword ? "Hide" : "Show"}
-                </button>
-              </div>
-            </div>
-            <div className="mb-3">
-              <label htmlFor="confirmPassword" className="form-label">
-                Confirm New Password
-              </label>
-              <div className="input-group">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  className="form-control"
-                  id="confirmPassword"
-                  placeholder="Confirm new password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  required
-                />
-                <button
-                  type="button"
-                  className="btn btn-outline-secondary"
-                  onClick={togglePasswordVisibility}
-                >
-                  {showPassword ? "Hide" : "Show"}
-                </button>
-              </div>
-            </div>
-            <button type="submit" className="btn btn-primary">
-              Update Password
-            </button>
-          </form>
+              {isEditMode && <button type="submit" className="btn btn-success">Save Changes</button>}
+            </form>
+          </div>
         </div>
-        <div>
-        <button onClick={handleLogout} className="btn btn-outline-danger">
-          Logout
-        </button>
-        </div>
-        
       </div>
     </div>
-  );
+  </div>
+);
+
 };
 
 export default UserProfile;

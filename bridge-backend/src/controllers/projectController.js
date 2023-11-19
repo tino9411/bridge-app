@@ -23,14 +23,34 @@ exports.createProject = async (req, res) => {
   };
   
 
-// Get all projects for the logged-in user
+// Get all projects for the logged-in user with task count
 exports.getAllProjects = async (req, res) => {
-    try {
-        const projects = await Project.find({ projectManager: req.user._id });
-        res.status(200).json(projects);
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
+  try {
+      const projectsWithTaskCount = await Project.aggregate([
+          { $match: { projectManager: req.user._id } }, // Match projects by manager
+          {
+              $lookup: {
+                  from: 'tasks', // Assumes your Task collection is named 'tasks'
+                  localField: '_id',
+                  foreignField: 'project',
+                  as: 'tasks'
+              }
+          },
+          {
+              $addFields: {
+                  taskCount: { $size: '$tasks' }
+              }
+          },
+          {
+              $project: {
+                  tasks: 0 // Optionally, you can exclude the tasks array from the output
+              }
+          }
+      ]);
+      res.status(200).json(projectsWithTaskCount);
+  } catch (error) {
+      res.status(500).json({ error: error.message });
+  }
 };
 
 // Get a specific project by ID
@@ -313,7 +333,41 @@ exports.deleteMilestone = async (req, res) => {
 };
 
 
-
+exports.getProjectsWithTaskCount = async (req, res) => {
+  try {
+      const projectsWithTaskCount = await Project.aggregate([
+          {
+              $lookup: {
+                  from: Task.collection.name, // Join with the Task collection
+                  localField: '_id', // Field from the Project collection
+                  foreignField: 'project', // Field from the Task collection
+                  as: 'tasks' // Alias for the resulting array of tasks
+              }
+          },
+          {
+              $addFields: {
+                  taskCount: { $size: '$tasks' } // Count the tasks
+              }
+          },
+          {
+              $project: {
+                  // Define which fields to include in the result
+                  name: 1,
+                  description: 1,
+                  startDate: 1,
+                  endDate: 1,
+                  status: 1,
+                  budget: 1,
+                  taskCount: 1
+                  // Add other project fields as needed
+              }
+          }
+      ]);
+      res.json(projectsWithTaskCount);
+  } catch (error) {
+      res.status(500).send(error);
+  }
+};
 
   
   

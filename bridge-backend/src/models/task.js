@@ -18,7 +18,7 @@ const taskSchema = new Schema({
     },
     status: {
         type: String,
-        enum: ['open', 'in progress', 'completed'],
+        enum: ['open', 'in progress', 'on hold', 'completed'],
         default: 'open'
     },
     priority: {
@@ -40,6 +40,19 @@ const taskSchema = new Schema({
         type: Date,
         default: null // You can set a default due date, if required
     },
+    rate: {
+        type: Number,
+        default: null
+    }, 
+    files: [{
+        type: Schema.Types.ObjectId,
+        ref: 'File' // Reference to the 'File' model
+    }],
+    comments: [{
+        type: Schema.Types.ObjectId,
+        ref: 'Comment' // Reference to the 'Comment' model
+    }]
+
 }, { timestamps: true }); // Add createdAt and updatedAt fields
 
 const Task = mongoose.model('Task', taskSchema);

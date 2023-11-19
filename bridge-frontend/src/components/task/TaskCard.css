@@ -1,0 +1,144 @@
+/* TaskCard.css */
+.task-card {
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  border-radius: 16px;
+  background-color: #fff;
+  margin-bottom: 2rem;
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  display: flex;
+  justify-content: space-between; /* Align items to the sides */
+  flex-direction: column; /* Align items vertically */
+  height: 280px;
+  position: relative;
+}
+
+.task-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 15px 45px rgba(0, 0, 0, 0.3);
+}
+
+.task-header {
+  font-size: 1rem;
+  padding: 1rem 1.5rem;
+  background-color: #fff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-bottom: 2px solid #f0f0f0;
+}
+
+.task-title {
+  font-weight: 500;
+  color: #333;
+}
+
+.task-body {
+  padding: 1rem 1.5rem;
+  font-size: 0.75rem;
+  color: #555;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* Three columns for task details */
+  gap: 1rem;
+  align-items: center;
+  
+}
+
+.task-metadata {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+
+}
+
+.task-status-badge,
+.task-priority-badge {
+  /* Combine styles for both status and priority badges */
+  padding: 0.25rem 0.5rem;
+  border-radius: 1rem;
+  color: #fff;
+  font-weight: 700;
+  text-align: center;
+  font-size: 0.75rem;
+  margin-right: 0.5rem; /* Adds spacing between badges if they are next to each other */
+}
+/* Specific status and priority badge colors */
+.task-status-badge.open {
+  background-color: #5bc0de;
+}
+.task-status-badge.in-progress {
+  background-color: #f0ad4e;
+}
+.task-status-badge.completed {
+  background-color: #5cb85c;
+}
+.task-status-badge.on-hold {
+  background-color: #d9534f;
+}
+.task-priority-badge.low {
+  background-color: #5cb85c;
+}
+.task-priority-badge.medium {
+  background-color: #f0ad4e;
+}
+.task-priority-badge.high {
+  background-color: #d9534f;
+}
+.task-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 5rem;
+  position: absolute;
+  right: 1rem; /* Adjust the spacing to the right edge */
+  top: 1rem; /* Adjust the spacing to the top edge */
+}
+.task-action-button {
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 1rem; /* Adjusted for icon size */
+}
+
+.task-action-button-edit {
+  color: #0275d8;
+}
+.task-action-button-complete {
+  color: #5cb85c;
+}
+.task-action-button-delete {
+  color: #d9534f;
+}
+
+.task-action-button:hover {
+  opacity: 0.8;
+}
+
+.task-footer {
+  padding: 0.75rem 1.5rem;
+  background-color: #f8f9fa;
+  display: flex;
+  justify-content: flex-start; /* Adjust alignment as needed */
+  align-items: center;
+  border-top: 1px solid #eee; /* Adds a subtle line to the top of the footer */
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+
+}
+
+/* Button styling inside the task footer */
+.task-footer button {
+  margin-left: 0.5rem;
+  border: none;
+  border-radius: 0.25rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.task-footer button:hover {
+  opacity: 0.9;
+}

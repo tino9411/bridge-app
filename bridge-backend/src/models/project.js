@@ -55,6 +55,11 @@ const projectSchema = new Schema({
     required: true,
     ref: 'User'
   },
+  priority: {
+    type: String,
+    enum: ['New', 'Low', 'Medium', 'High'],
+    default: 'New'
+  },
   startDate: {
     type: Date,
     required: true
@@ -72,6 +77,7 @@ const projectSchema = new Schema({
     type: Number,
     default: 0
   },
+
   tasks: [{
     type: Schema.Types.ObjectId,
     ref: 'Task'
@@ -92,6 +98,23 @@ const projectSchema = new Schema({
     currentSpend: Number,
     forecastCompletionBudget: Number
   },
+  tags: [{
+    type: String,
+    trim: true
+  }],
+  client: {
+    type: String,
+    trim: true
+  },
+  clientEmail: {
+    type: String,
+    trim: true
+  },
+  clientPhoneNumber: {
+    type: String,
+    trim: true
+  },
+  
 }, { timestamps: true });
 
 const Project = mongoose.model('Project', projectSchema);

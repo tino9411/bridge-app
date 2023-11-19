@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useParams, Link } from 'react-router-dom';
 import TaskList from '../task/TaskList';
+import './Project.css'; 
 
 const Project = () => {
   // State to hold the project details
@@ -11,6 +12,12 @@ const Project = () => {
   const [error, setError] = useState('');
   // Get projectId from the URL parameters
   const { projectId } = useParams();
+
+  // Formatting dates
+  const formatDate = (dateString) => {
+    const options = { year: 'numeric', month: 'long', day: 'numeric' };
+    return new Date(dateString).toLocaleDateString(undefined, options);
+  };
 
   // useEffect to run the fetch operation when the component mounts or when projectId changes
   useEffect(() => {
@@ -33,27 +40,28 @@ const Project = () => {
   // If the project data is not yet loaded, show a loading message
   if (!project) return <p>Loading...</p>;
 
-  // Render the project details, or an error message if an error occurred
   return (
-    <div className="container my-4">
-      <Link to="/dashboard" className="btn btn-secondary mb-3">Back to Dashboard</Link>
-      <h2 className="mb-3">{project?.name}</h2>
-      {error && <p className="alert alert-danger">{error}</p>}
+    <div className="project-container">
+      <header className="project-header">
+        <Link to="/dashboard" className="btn-back">⬅ Back to Dashboard</Link>
+        <h2>{project?.name}</h2>
+        <Link to={`/edit-project/${project?._id}`} className="btn-edit">Edit Project</Link>
+      </header>
+
+      {error && <div className="alert">{error}</div>}
 
       {project && (
-        <div className="card mb-3">
-          <div className="card-body">
+        <div className="project-details">
+          <div className="project-info">
             <p><strong>Description:</strong> {project.description}</p>
-            <p><strong>Start Date:</strong> {project.startDate}</p>
-            <p><strong>End Date:</strong> {project.endDate}</p>
-            <p><strong>Status:</strong> {project.status}</p>
-            <p><strong>Budget:</strong> ${project.budget}</p>
+            <p><strong>Start Date:</strong> {formatDate(project.startDate)}</p>
+            <p><strong>End Date:</strong> {formatDate(project.endDate)}</p>
+            <p><strong>Status:</strong> <span className={`status ${project.status.toLowerCase()}`}>{project.status}</span></p>
+            <p><strong>Budget:</strong> <span className="budget">${project.budget.toLocaleString()}</span></p>
           </div>
+          <TaskList projectId={project._id} /> {/* Pass projectId to TaskList if needed */}
         </div>
       )}
-      <Link to={`/edit-project/${project?._id}`} className="btn btn-primary mb-3">Edit Project</Link>
-
-      <TaskList /> {/* Render TaskList component */}
     </div>
   );
 };

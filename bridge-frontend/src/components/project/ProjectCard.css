@@ -1,0 +1,177 @@
+.project-card {
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2); /* More pronounced shadow for depth */
+  border-radius: 16px; /* Increased border-radius for rounded corners */
+  background-color: #fff;
+  margin-bottom: 2rem;
+  border: 1px solid #eaeaea; /* Light border for definition */
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.project-card:hover {
+  transform: translateY(-10px); /* More noticeable lift effect on hover */
+  box-shadow: 0 15px 45px rgba(0, 0, 0, 0.3); /* Even more pronounced shadow on hover */
+}
+
+.project-card-header {
+  font-size: 1rem;
+  padding: 1rem 1.5rem;
+  background-color: #fff;
+  display: flex;
+  text-align: center;
+  justify-content: center; /* Aligns title and icon/image */
+  border-bottom: 2px solid #f0f0f0;
+}
+
+.project-card-title {
+  font-weight: 500;
+  color: #333;
+}
+
+.project-card-body {
+  padding: 1rem 1.5rem;
+  color: #555; /* Darker text for better readability */
+  line-height: 1.5; /* More readable line height */
+  text-align: center;
+}
+
+.project-card-body .project-dates {
+    display: block;
+  }
+
+.project-card-body .project-date {
+  margin: 0.5rem 0; /* Removes default margin for consistent spacing */
+  font-size: 0.8rem;
+  color: #6c757d;
+}
+
+.project-status {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+/* Specific status colors */
+.project-status.not-started {
+  color: #5bc0de;
+}
+.project-status.in-progress {
+  color: #f0ad4e;
+}
+.project-status.completed {
+  color: #5cb85c;
+}
+.project-status.on-hold {
+  color: #d9534f;
+}
+
+.project-budget {
+  font-size: 0.9rem;
+  color: #6c757d;
+  font-weight: 400;
+}
+
+.project-assigned,
+.project-due {
+  font-size: 0.85rem;
+  color: #6c757d;
+}
+
+.project-priority {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 1rem; /* Rounded pill shape */
+  background-color: #ccc; /* Default light background for better contrast */
+  color: #fff;
+  text-align: center; /* Centers the text within the badge */
+  display: block; /* Makes it a block element to fill the container */
+  width: fit-content; /* Only as wide as its content */
+  margin: auto; /* Centers the badge within its container */
+  justify-content: center; /* Centers content for flex items */
+  display: flex; /* Applies flex display to center vertically as well */
+  align-items: center; /* Centers content vertically in the badge */
+}
+
+/* Priority badge colors */
+.project-priority.low {
+  background-color: #5cb85c;
+  color: #fff;
+}
+.project-priority.medium {
+  background-color: #f0ad4e;
+  color: #fff;
+  text-align: center;
+}
+.project-priority.high {
+  background-color: #d9534f;
+  color: #fff;
+}
+.project-priority.new {
+  background-color: #a1a4a6;
+  color: #fff;
+} /* New priority badge */
+
+.project-card-body .project-task-count {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    background-color: #17a2b8; /* Bootstrap's info color for example */
+    color: white;
+    border-radius: 10px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    text-align: center;
+    margin-top: 0.5rem;
+  }
+
+  /* ProjectCard.css */
+.project-delete-button {
+    cursor: pointer;
+    border: none;
+    background: none;
+    padding: 0;
+    font-size: 1.5rem;
+    line-height: 1;
+    color: #999; /* A less intense color for the 'X' */
+    position: fixed;
+    top: 0.5rem;
+    right: 0.5rem;
+  }
+  
+  .project-delete-button:hover {
+    color: #d9534f; /* A color to indicate a destructive action on hover */
+  }
+  
+
+.project-card-footer {
+  padding: 0.75rem 1.5rem;
+  background-color: #f8f9fa;
+  display: flex;
+  align-items: center;
+  justify-content: center; /* Pushes buttons to the right */
+}
+
+/* Button styling inside the card footer */
+.project-card-footer button {
+  margin-left: 0.5rem; /* Spacing between buttons */
+  border: none;
+  border-radius: 0.25rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.project-card-footer button:hover {
+  opacity: 0.9; /* Slight transparency effect on hover */
+}
+
+/* Adding some spacing to the bottom of the last element in card body */
+.project-card-body > *:last-child {
+  margin-bottom: 0;
+}
+
+.project-card-title {
+  font-weight: 500;
+  color: #333;
+}
+
+
