@@ -22,10 +22,15 @@ const App = () => {
     }
   }, []);
 
-  const handleLogin = (token) => {
-    localStorage.setItem('token', token);
+  const handleLogin = (token, rememberMe) => {
+    if (rememberMe) {
+      localStorage.setItem('token', token); // Persistent storage
+    } else {
+      sessionStorage.setItem('token', token); // Session-only storage
+    }
     setIsAuthenticated(true);
   };
+  
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -35,41 +40,41 @@ const App = () => {
   return (
     <Router>
       <Routes>
-      <Route path="/" element={<Navigate replace to="/dashboard" />} />
+        <Route path="/" element={<Navigate replace to="/dashboard" />} />
         <Route path="/dashboard" element={
           <Layout isAuthenticated={isAuthenticated} onLogout={handleLogout}>
             <Dashboard />
           </Layout>
         } />
         <Route path="/user-profile" element={
-          <Layout isAuthenticated={isAuthenticated}>
+          <Layout isAuthenticated={isAuthenticated} onLogout={handleLogout}>
             <UserProfile />
           </Layout>
         } />
         <Route path="/projects" element={
-          <Layout isAuthenticated={isAuthenticated}>
+          <Layout isAuthenticated={isAuthenticated} onLogout={handleLogout}>
             <ProjectList />
           </Layout>
         } />
         <Route path="/tasks" element={
-          <Layout isAuthenticated={isAuthenticated}>
+          <Layout isAuthenticated={isAuthenticated} onLogout={handleLogout}>
             <TaskList />
           </Layout>
         } />
         <Route path="/login" element={!isAuthenticated ? <Login onLogin={handleLogin} /> : <Navigate to="/dashboard" />} />
         <Route path="/register" element={!isAuthenticated ? <Register /> : <Navigate to="/dashboard" />} />
         <Route path="/projects/:projectId" element={
-          <Layout isAuthenticated={isAuthenticated}>
+          <Layout isAuthenticated={isAuthenticated} onLogout={handleLogout}>
             <Project />
           </Layout>
         } />
         <Route path="/edit-project/:projectId" element={
-          <Layout isAuthenticated={isAuthenticated}>
+          <Layout isAuthenticated={isAuthenticated} onLogout={handleLogout}>
             <EditProject />
           </Layout>
         } />
         <Route path="/create-task/:projectId" element={
-          <Layout isAuthenticated={isAuthenticated}>
+          <Layout isAuthenticated={isAuthenticated} onLogout={handleLogout}>
             <CreateTask />
           </Layout>
         } />

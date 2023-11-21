@@ -1,4 +1,28 @@
 //project.js
+
+/**
+ * @typedef {Object} ProjectSchema
+ * @property {string} name - The name of the project.
+ * @property {string} description - The description of the project.
+ * @property {Schema.Types.ObjectId} projectManager - The ID of the project manager.
+ * @property {string} priority - The priority of the project. Can be one of: 'New', 'Low', 'Medium', 'High'.
+ * @property {Date} startDate - The start date of the project.
+ * @property {Date} endDate - The end date of the project.
+ * @property {string} status - The status of the project. Can be one of: 'Not Started', 'In Progress', 'Completed', 'On Hold'.
+ * @property {number} budget - The budget of the project.
+ * @property {Schema.Types.ObjectId[]} tasks - The IDs of the tasks associated with the project.
+ * @property {PhaseSchema[]} phases - The phases of the project.
+ * @property {Schema.Types.ObjectId[]} resources - The IDs of the resources associated with the project.
+ * @property {Risk[]} risks - The risks associated with the project.
+ * @property {BudgetDetails} budgetDetails - The budget details of the project.
+ * @property {string[]} tags - The tags associated with the project.
+ * @property {string} client - The client of the project.
+ * @property {string} clientEmail - The email of the client.
+ * @property {string} clientPhoneNumber - The phone number of the client.
+ * @property {Date} createdAt - The creation date of the project.
+ * @property {Date} updatedAt - The last update date of the project.
+ */
+
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
@@ -37,7 +61,12 @@ const phaseSchema = new Schema({
     enum: ['Not Started', 'In Progress', 'Completed'],
     default: 'Not Started'
   },
+  assignedTasks: [{
+    type: Schema.Types.ObjectId,
+    ref: 'Task'
+  }],
   milestones: [milestoneSchema] // Embeds the milestones within phases
+
 }); // Prevents creation of separate _id for phases
 
 const projectSchema = new Schema({
@@ -83,7 +112,7 @@ const projectSchema = new Schema({
     ref: 'Task'
   }],
   phases: [phaseSchema], // Uses the phaseSchema defined above
-  resources: [{
+  team: [{
     type: Schema.Types.ObjectId,
     ref: 'User'
   }],

@@ -370,5 +370,16 @@ exports.getProjectsWithTaskCount = async (req, res) => {
 };
 
   
-  
+exports.getProjectTeamMembers = async (req, res) => {
+  try {
+    const project = await Project.findById(req.params.projectId).populate('team');
+    if (!project) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+    res.status(200).json(project.team); // Use 'team' instead of 'teamMembers'
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
   

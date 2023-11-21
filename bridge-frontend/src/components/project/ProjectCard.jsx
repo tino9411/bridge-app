@@ -1,39 +1,50 @@
-// ProjectCard.jsx
-import React, { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import "./ProjectCard.css"; // Import custom styling
+import {
+  Card,
+  CardHeader,
+  CardContent,
+  IconButton,
+  Chip,
+  Box,
+  Tooltip,
+  Typography
+} from '@mui/material';
+import DeleteIcon from '@mui/icons-material/Delete';
+import { green, orange, red, blue, grey } from '@mui/material/colors';
+import { formatDistance } from 'date-fns';
 
 const ProjectCard = ({ project, onDelete }) => {
-  let statusClass = "";
-  switch (project.status) {
-    case "In Progress":
-      statusClass = "in-progress";
-      break;
-    case "Completed":
-      statusClass = "completed";
-      break;
-    case "On Hold":
-      statusClass = "on-hold";
-      break;
-    default:
-      statusClass = "not-started";
-  }
+  const navigate = useNavigate();
 
-  let priorityClass = ""; // Add this
-  switch (project.priority) {
-    case "Medium":
-      priorityClass = "medium";
-      break;
-    case "High":
-      priorityClass = "high";
-      break;
-    case "Low":
-      priorityClass = "low";
-      break;
-    default:
-      priorityClass = "new";
-  }
+// Function to get a human-readable string representing the time since last update
+const timeSinceLastUpdate = (updatedAt) => {
+    return formatDistance(new Date(updatedAt), new Date(), { addSuffix: true });
+  };
+
+  // Define a theme object or use ThemeProvider to globally define these
+  const theme = {
+    status: {
+      'Not Started': blue[500],
+      'In Progress': orange[500],
+      'Completed': green[500],
+      'On Hold': red[500],
+    },
+    priority: {
+      Low: green[700],
+      Medium: orange[700],
+      High: red[700],
+      New: grey[700],
+    },
+
+    title: {
+        fontSize: 12,
+        },
+  };
+
+  // Format date function here
+
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     const day = String(date.getDate()).padStart(2, "0");
@@ -42,52 +53,69 @@ const ProjectCard = ({ project, onDelete }) => {
     return `${day}-${month}-${year}`;
   };
 
-  const projectDetailLink = `/projects/${project._id}`; // Add this
-  const navigate = useNavigate();
-
-  // Function to navigate to project details
-  const goToProjectDetails = () => {
-    navigate(`/projects/${project._id}`);
-  };
-// Handler for the delete action
-const handleDelete = async (event) => {
+  const handleDelete = async (event) => {
     event.stopPropagation();
-    if (window.confirm('Are you sure you want to delete this project?')) {
-      try {
-        await axios.delete(`http://localhost:3000/projects/${project._id}`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          },
-        });
-        onDelete(project._id); // Call the onDelete function passed via props
-      } catch (error) {
-        console.error('Error deleting the project:', error);
-      }
+    if (!window.confirm('Are you sure you want to delete this project?')) return;
+
+    // Delete logic here
+    try {
+      await axios.delete(`http://localhost:3000/projects/${project._id}`);
+      onDelete(project._id);
+    } catch (error) {
+      console.error('Error deleting the project:', error);
     }
   };
 
+  const goToProjectDetails = () => {
+    navigate(`/projects/${project._id}`);
+  };
+
   return (
-    <div className="project-card" onClick={goToProjectDetails}>
-      <div className="project-card-header">
-        <h6 className="project-card-title">{project.name}</h6>
-        <button className="project-delete-button" onClick={handleDelete}>&times;</button>
-        {/* Add icon or image here if needed */}
-      </div>
-      <div className="project-card-body">
-        <p className={`project-status ${statusClass}`}>{project.status}</p>
-        <p className="project-budget">Budget: ${project.budget}</p>
-        <div className="project-dates">
-          <p className="project-date">Start: {formatDate(project.startDate)}</p>
-          <p className="project-date">End: {formatDate(project.endDate)}</p>
-          <p className="project-task-count">Tasks: {project.taskCount}</p>
-        </div>
-        <p className={`project-priority ${priorityClass}`}>
-          {project.priority}
-        </p>
-      </div>
-      <div className="project-card-footer">
-      </div>
-    </div>
+    <Card
+      sx={{
+        maxWidth: 250,
+        boxShadow: 3,
+        '&:hover': {
+          transform: 'translateY(-10px)',
+          boxShadow:8,
+        },
+        m: 2,
+        borderRadius: 5, // theme.shape.borderRadius could also be used if defined
+        borderColor: grey[300],
+        '& .MuiCardHeader-action': {
+          alignSelf: 'center',
+        }
+      }}
+      onClick={goToProjectDetails}
+    >
+      <CardHeader
+        action={
+          <Tooltip title="Delete Project">
+            <IconButton aria-label="delete" size="small" onClick={handleDelete}>
+  <DeleteIcon fontSize="small" />
+</IconButton>
+          </Tooltip>
+        }
+        title={project.name}
+        subheader={`${formatDate(project.startDate)} - ${formatDate(project.endDate)}`}
+        titleTypographyProps={{ fontWeight: 'fontWeightLight', fontSize: '0.8rem' }}
+        subheaderTypographyProps={{ fontSize: '0.7rem', justifyContent: 'center', alignContent: 'center' }}
+      />
+      <CardContent>
+      <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.7rem', justifyContent: 'center', alignContent: 'center', m: 0, padding: 0 }}>
+            
+          Budget: ${project.budget}
+        </Typography>
+        <Chip label={project.status} size="small" sx={{ bgcolor: theme.status[project.status], color: 'common.white', m: 0.1, fontSize: '0.6rem',  }} />
+        <Chip label={project.priority} size="small"  sx={{ bgcolor: theme.priority[project.priority], color: 'common.white', m: 0.1, fontSize: '0.6rem' }} />
+
+      </CardContent>
+      <Box sx={{ p: 1, display: 'flex', justifyContent: 'center', bgcolor: grey[200] }}>
+        <Typography variant="body2" color="text.secondary" style={{ fontSize: '0.7rem' }}>
+        Last updated {timeSinceLastUpdate(project.updatedAt)}
+        </Typography>  
+      </Box>
+    </Card>
   );
 };
 

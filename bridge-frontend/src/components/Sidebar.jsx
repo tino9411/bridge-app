@@ -4,15 +4,19 @@ import { House, Speedometer2, Person } from 'react-bootstrap-icons';
 import { Link, useNavigate } from 'react-router-dom';
 import { Dropdown } from 'react-bootstrap';
 import './Sidebar.css'; // Import the Sidebar CSS
+import './Dashboard.jsx'; // Import the Dashboard component
 
 const Sidebar = ({ onLogout }) => {
     const navigate = useNavigate();
   
     const handleLogout = () => {
-      // Perform logout operations like clearing the token
-      onLogout();
-      // Redirect to login or home page after logout
-      navigate('/login');
+      if (typeof onLogout === 'function') {
+        onLogout();
+        navigate('/login');
+      } else {
+        console.error('Logout function not provided');
+        // Handle the lack of onLogout function
+      }
     };
   return (
     <div className="d-flex flex-column flex-shrink-0 p-3 text-white bg-dark" style={{ width: '280px' }}>

@@ -8,7 +8,9 @@ const {
     requestPasswordReset,
     resetPassword,
     updatePassword,
-    updateProfile
+    updateProfile,
+    checkUsername,
+    getAssignedTasks
 } = require('../controllers/userController');
 const authMiddleware = require('../middlewares/auth');
 const cors = require('cors');
@@ -52,6 +54,12 @@ router.post('/resetPassword', resetPassword);
 router.post('/updatePassword', authMiddleware,updatePassword);
 
 //Update profile route
-router.post('/updateProfile', authMiddleware, upload.single('profileImage'), updateProfile);
+router.patch('/updateProfile', authMiddleware, upload.single('profileImage'), updateProfile);
+
+//Check the username for uniqueness
+router.get('/checkUsername/username', checkUsername);
+
+//Get assigned tasks
+router.get('/assignedTasks/:username', authMiddleware, getAssignedTasks);
 
 module.exports = router;

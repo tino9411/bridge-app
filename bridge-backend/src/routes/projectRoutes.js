@@ -16,7 +16,8 @@ const {
     addMilestoneToProject,
     updateMilestone,
     deleteMilestone,
-    getProjectsWithTaskCount
+    getProjectsWithTaskCount,
+    getProjectTeamMembers
   } = require('../controllers/projectController');
 const authMiddleware = require('../middlewares/auth');
 const checkProjectManagerRole = require('../middlewares/checkProjectManagerRole'); // Ensure you have this middleware to check for the project manager role
@@ -58,5 +59,8 @@ router.patch('/:projectId/details', authMiddleware, checkProjectManagerRole, upd
 router.post('/:projectId/phases/:phaseId/milestones', authMiddleware,checkProjectManagerRole, addMilestoneToProject);
 router.put('/:projectId/phases/:phaseId/milestones/:milestoneId', authMiddleware, checkProjectManagerRole, updateMilestone);
 router.delete('/:projectId/phases/:phaseId/milestones/:milestoneId', authMiddleware, checkProjectManagerRole, deleteMilestone);
+
+//Route to get team members of a project
+router.get('/:projectId/team', authMiddleware, checkProjectManagerRole, getProjectTeamMembers);
 
 module.exports = router;

@@ -4,7 +4,7 @@ const router = express.Router();
 const taskCommentController = require('../controllers/taskCommentController');
 
 // Create a new comment
-router.post('/', taskCommentController.createTaskComment);
+router.post('/task/:taskId/comment', taskCommentController.createTaskComment);
 
 // Get all comments for a task
 router.get('/task/:taskId', taskCommentController.getTaskComments);

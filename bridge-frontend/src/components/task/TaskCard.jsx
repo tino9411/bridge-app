@@ -8,20 +8,20 @@ const TaskCard = ({ task, onDelete, onComplete, onEdit, onClick }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-const formatDate = (isoDate) => {
+  const formatDate = (isoDate) => {
     const date = new Date(isoDate);
-    const day = date.getDate().toString().padStart(2, '0');
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, "0");
+    const month = (date.getMonth() + 1).toString().padStart(2, "0");
     const year = date.getFullYear().toString();
     return `${day}-${month}-${year}`;
-};
+  };
 
   // Update the task object with formatted dates
   task = {
     ...task,
     dueDate: formatDate(task.dueDate),
     createdAt: formatDate(task.createdAt),
-    updatedAt: formatDate(task.updatedAt)
+    updatedAt: formatDate(task.updatedAt),
   };
 
   const handleDelete = async () => {
@@ -141,7 +141,7 @@ const formatDate = (isoDate) => {
             <select
               id="assignedTo"
               name="assignedTo"
-              value={task.assignee}
+              value={task.assignee.username}
               onChange={handleChange}
               required
             >
@@ -196,16 +196,18 @@ const formatDate = (isoDate) => {
         <h5 className="task-title">{task.title}</h5>
       </div>
       <div className="task-body">
-        <p>Assigned to: {task.assignee}</p>
-        <p>Phase: {task.phase}</p>
-        <p>Rate: {task.rate}</p>
-        <p>Project ID: {task.project}</p>
-        <p>Comments: </p>
-        <p>Number of Assignees:</p>
-        <span className="task-date">Due Date: {task.dueDate}</span>
-        <span className="task-date">Created at: {task.createdAt}</span>
-        <span className="task-date">Updated at: {task.updatedAt}</span>
-    
+        <div className="task-body-1">
+          <p>Project: {task.project.name}</p>
+          <p>Phase: {task.phase}</p>
+          <p>Rate: {task.rate}</p>
+        </div>
+
+        <div className="task-dates">
+          <span className="task-date">Due Date: {task.dueDate}</span>
+          <span className="task-date">Created at: {task.createdAt}</span>
+          <span className="task-date">Updated at: {task.updatedAt}</span>
+        </div>
+
         <div className="task-actions">
           <button
             onClick={() => handleEditClick(task)}

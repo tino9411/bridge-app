@@ -1,6 +1,6 @@
-const User = require('../models/user');
-const crypto = require('crypto');
 
+const User = require("../models/user");
+const crypto = require("crypto");
 
 // Registration logic
 exports.register = async (req, res) => {
@@ -24,12 +24,16 @@ exports.login = async (req, res) => {
         // Find the user by email
         const user = await User.findOne({ email: req.body.email });
         if (!user) {
-            return res.status(401).send({ error: 'Login failed! Check authentication credentials' });
+            return res
+                .status(401)
+                .send({ error: "Login failed! Check authentication credentials" });
         }
         // Check if the password matches
         const isPasswordMatch = await user.comparePassword(req.body.password);
         if (!isPasswordMatch) {
-            return res.status(401).send({ error: 'Login failed! Check authentication credentials' });
+            return res
+                .status(401)
+                .send({ error: "Login failed! Check authentication credentials" });
         }
         // Generate an auth token
         const token = await user.generateAuthToken();
@@ -39,14 +43,17 @@ exports.login = async (req, res) => {
         res.status(400).send(error);
     }
 };
+
 // Logout logic
 exports.logout = async (req, res) => {
     try {
         // Remove the token from the user's array of tokens
-        req.user.tokens = req.user.tokens.filter(token => token.token !== req.token);
+        req.user.tokens = req.user.tokens.filter(
+            (token) => token.token !== req.token
+        );
         await req.user.save();
 
-        res.send({ message: 'Logged out successfully' });
+        res.send({ message: "Logged out successfully" });
     } catch (error) {
         res.status(500).send({ error: error.message });
     }
@@ -58,11 +65,11 @@ exports.requestPasswordReset = async (req, res) => {
         const user = await User.findOne({ email: req.body.email });
         if (!user) {
             // You might want to limit information here to prevent email enumeration
-            return res.status(404).send({ error: 'User not found' });
+            return res.status(404).send({ error: "User not found" });
         }
 
         // Generate a password reset token
-        user.passwordResetToken = crypto.randomBytes(32).toString('hex');
+        user.passwordResetToken = crypto.randomBytes(32).toString("hex");
         user.passwordResetExpires = Date.now() + 3600000; // 1 hour from now
         await user.save();
 
@@ -70,23 +77,24 @@ exports.requestPasswordReset = async (req, res) => {
         // Here, integrate with an email service to send the token
         // sendPasswordResetEmail(user.email, user.passwordResetToken);
 
-        res.send({ message: 'Password reset email sent' });
+        res.send({ message: "Password reset email sent" });
     } catch (error) {
         res.status(500).send({ error: error.message });
     }
 };
 
 // Password reset logic
-exports.resetPassword = async (req, res) => {s
+exports.resetPassword = async (req, res) => {
+    s;
     try {
         const { token, newPassword } = req.body;
         const user = await User.findOne({
             passwordResetToken: token,
-            passwordResetExpires: { $gt: Date.now() }
+            passwordResetExpires: { $gt: Date.now() },
         });
 
         if (!user) {
-            return res.status(400).send({ error: 'Token is invalid or has expired' });
+            return res.status(400).send({ error: "Token is invalid or has expired" });
         }
 
         // Set the new password and clear the reset token
@@ -95,12 +103,13 @@ exports.resetPassword = async (req, res) => {s
         user.passwordResetExpires = undefined;
         await user.save();
 
-        res.send({ message: 'Password has been reset successfully' });
+        res.send({ message: "Password has been reset successfully" });
     } catch (error) {
         res.status(500).send({ error: error.message });
     }
 };
 
+// Update password logic
 exports.updatePassword = async (req, res) => {
     try {
         const user = req.user;
@@ -110,44 +119,79 @@ exports.updatePassword = async (req, res) => {
         user.password = newPassword;
         await user.save();
 
-        res.send({ message: 'Password updated successfully' });
+        res.send({ message: "Password updated successfully" });
     } catch (error) {
         res.status(500).send({ error: error.message });
     }
 };
 
-// Assuming the User model's password and tokens fields should not be returned in the profile.
+// Get user profile logic
 exports.getProfile = async (req, res) => {
-    // We don't want to send the password and tokens array back in the response
-    // So we make sure to remove them from the result
-    const { password, tokens, ...userWithoutSensitiveData } = req.user.toObject();
+    try {
+        // We don't want to send the password and tokens array back in the response
+        // So we make sure to remove them from the result
+        const { password, tokens, ...userWithoutSensitiveData } =
+            req.user.toObject();
 
-    res.send(userWithoutSensitiveData);
+        res.send(userWithoutSensitiveData);
+    } catch (error) {
+        res.status(500).send({ error: error.message });
+    }
 };
 
+// Update user profile logic
 exports.updateProfile = async (req, res) => {
     try {
-      const user = req.user;
-      const updateFields = ['phoneNumber', 'secondaryEmail', 'skills', 'biography'];
-  
-      updateFields.forEach(field => {
-        if (req.body[field] !== undefined) {
-          user[field] = req.body[field];
-        }
-      });
-  
-      if (req.file) {
-        user.profileImage = req.file.path; // Save the path of the uploaded file
-      }
+        const user = req.user;
+        const updateFields = req.body;
 
-      if (req.body.skills) {
-        user.skills = req.body.skills.split(',').map(skill => skill.trim());
-      }
-  
-      await user.save();
-      res.send({ message: 'Profile updated successfully', user });
+        Object.keys(updateFields).forEach((field) => {
+            if (req.body[field] !== undefined) {
+                user[field] = req.body[field];
+            }
+        });
+
+        if (req.file) {
+            user.profileImage = req.file.path; // Save the path of the uploaded file
+        }
+
+        if (typeof req.body.skills === "string") {
+            user.skills = req.body.skills.split(",").map((skill) => skill.trim());
+        }
+
+        await user.save();
+        res.send({ message: "Profile updated successfully", user });
     } catch (error) {
-      res.status(500).send({ error: error.message });
+        res.status(500).send({ error: error.message });
     }
-  };
-  
+};
+
+exports.checkUsername = async (req, res) => {
+    try {
+        const user = await User.findOne({ username: req.params.username });
+        if (user) {
+            return res.status(409).send({ error: "Username already taken" });
+        }
+        res.send({ message: "Username is available" });
+    } catch (error) {
+        res.status(500).send({ error: error.message });
+    }
+};
+
+exports.getAssignedTasks = async (req, res) => {
+    try {
+        const { username } = req.params;
+        const user = await User.findOne({ username: username })
+                                .populate({
+                                    path: 'assignedTasks',
+                                    populate: { path: 'project', select: 'name' } // Populating project name
+                                });
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+        res.status(200).json(user.assignedTasks);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+

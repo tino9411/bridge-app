@@ -115,7 +115,7 @@ const UserProfile = () => {
     }
 
     try {
-      const response = await axios.post(
+      const response = await axios.patch(
         "http://localhost:3000/users/updateProfile",
         formData,
         {

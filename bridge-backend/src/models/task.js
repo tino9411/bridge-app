@@ -1,3 +1,28 @@
+/**
+ * task.js
+ * @typedef {import('mongoose').Schema} Schema
+ * @typedef {import('mongoose').Model} Model
+ * @typedef {import('mongoose').Document} Document
+ * 
+ * @typedef {Object} Task
+ * @property {import('mongoose').Types.ObjectId} project - The ID of the project the task belongs to.
+ * @property {string} title - The title of the task.
+ * @property {string} [description] - The description of the task.
+ * @property {'open' | 'in progress' | 'on hold' | 'completed'} [status='open'] - The status of the task.
+ * @property {'low' | 'medium' | 'high'} [priority='medium'] - The priority of the task.
+ * @property {import('mongoose').Types.ObjectId} [phase] - The ID of the phase the task belongs to.
+ * @property {string[]} [skillsNeeded] - The skills needed for the task.
+ * @property {import('mongoose').Types.ObjectId} [assignee] - The ID of the user assigned to the task.
+ * @property {Date} [dueDate] - The due date of the task.
+ * @property {number} [rate] - The rate of the task.
+ * @property {import('mongoose').Types.ObjectId[]} [files] - The IDs of the files associated with the task.
+ * @property {import('mongoose').Types.ObjectId[]} [comments] - The IDs of the comments associated with the task.
+ * @property {Date} createdAt - The creation date of the task.
+ * @property {Date} updatedAt - The last update date of the task.
+ * 
+ * @type {Schema<Task, Model<Task, Document>, Task>}
+ */
+
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
@@ -23,8 +48,8 @@ const taskSchema = new Schema({
     },
     priority: {
         type: String,
-        enum: ['low', 'medium', 'high'],
-        default: 'medium'
+        enum: ['new','low', 'medium', 'high'],
+        default: 'low'
     },
     phase: {
       type: Schema.Types.ObjectId,
