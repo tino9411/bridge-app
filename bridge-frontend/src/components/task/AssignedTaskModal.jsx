@@ -27,16 +27,6 @@ const AssignedTaskModal = ({ task, open, onClose }) => {
     </Box>
   );
 
-  // Function to handle comment submission
-  const handleCommentSubmit = (event) => {
-    event.preventDefault();
-    if (newComment.trim()) {
-      setComments([...comments, newComment]);
-      setNewComment('');
-      // Here you would also send the comment to the backend API
-    }
-  };
-
   return (
     <Modal
       open
@@ -111,7 +101,6 @@ const AssignedTaskModal = ({ task, open, onClose }) => {
          
           
         </CardContent>
-        
         <Box 
         sx={{ p: 1, 
         m: 0, 
