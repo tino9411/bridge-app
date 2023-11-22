@@ -1,3 +1,4 @@
+//taskComment models
 const mongoose = require('mongoose');
 
 const taskCommentSchema = new mongoose.Schema({
@@ -15,11 +16,17 @@ const taskCommentSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    createdAt: {
-        type: Date,
-        default: Date.now
-    }
-});
+    parentComment: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'TaskComment',
+        default: null // Indicates a top-level comment
+      },
+      replies: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'TaskComment'
+      }]
+
+}, { timestamps: true });
 
 const TaskComment = mongoose.model('TaskComment', taskCommentSchema);
 

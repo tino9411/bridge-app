@@ -8,8 +8,9 @@ import IconButton from '@mui/material/IconButton';
 import CloseIcon from '@mui/icons-material/Close';
 import Chip from '@mui/material/Chip';
 import Box from '@mui/material/Box';
+import TaskComment from '../comment/TaskComment';
 
-const AssignedTaskModal = ({ task, open, onClose }) => {
+const AssignedTaskModal = ({ task, open, onClose, commentsData, addComment, deleteComment }) => {
   if (!task) return null;
 
   
@@ -99,7 +100,12 @@ const AssignedTaskModal = ({ task, open, onClose }) => {
             <strong>Rate:</strong> {task.rate || 'N/A'}
           </Typography>
          
-          
+          <TaskComment 
+          commentsData={commentsData} 
+          onSubmitComment={addComment}
+          onDeleteComment={deleteComment} 
+          taskId={task._id} 
+          />
         </CardContent>
         <Box 
         sx={{ p: 1, 

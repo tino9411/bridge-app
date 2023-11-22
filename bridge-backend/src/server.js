@@ -6,6 +6,7 @@ const corsOptions = require('./config/corsOptions'); // Adjust the path if neces
 const userRoutes = require('./routes/userRoutes');
 const projectRoutes = require('./routes/projectRoutes');
 const taskRoutes = require('./routes/taskRoutes');
+const taskCommentRoutes = require('./routes/taskCommentRoutes');
 
 const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, '../.env') });
@@ -33,6 +34,7 @@ app.use((req, res, next) => {
 app.use('/users', userRoutes);
 app.use('/projects', projectRoutes);
 app.use('/projects', taskRoutes);
+app.use('/tasks', taskCommentRoutes);
 
 // Handling 404
 app.use((req, res, next) => {
