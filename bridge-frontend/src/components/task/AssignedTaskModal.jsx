@@ -9,10 +9,30 @@ import CloseIcon from '@mui/icons-material/Close';
 import Chip from '@mui/material/Chip';
 import Box from '@mui/material/Box';
 import TaskComment from '../comment/TaskComment';
+import { green, orange, red, blue, grey } from "@mui/material/colors";
 
 const AssignedTaskModal = ({ task, open, onClose, commentsData, addComment, deleteComment }) => {
   if (!task) return null;
 
+    // Define a theme object or use ThemeProvider to globally define these
+    const theme = {
+      status: {
+        "open": blue[500],
+        "in progress": orange[500],
+        "completed": green[500],
+        "on hold": red[500],
+      },
+      priority: {
+        "low": green[700],
+        "medium": orange[700],
+        "high": red[700],
+        "new": grey[700],
+      },
+  
+      title: {
+        fontSize: 12,
+      },
+    };
   
   // Function to format dates
   const formatDate = (isoDate) => new Date(isoDate).toLocaleDateString("en-US", {
@@ -72,8 +92,15 @@ const AssignedTaskModal = ({ task, open, onClose, commentsData, addComment, dele
             <Typography variant="subtitle1" component="div" sx={{ mb: 1 }}>
             <strong>Project:</strong> {task.project.name}
             </Typography>
-            <Typography variant="subtitle1" component="div" >
-            <strong>Skills Needed:</strong> {renderSkills(task.skillsNeeded)}
+            <Typography variant="subtitle1" component="div"
+            sx={{
+              display: 'flex', 
+              flexDirection: 'row', 
+              justifyContent: 'space-around',
+              
+               }}
+             >
+            <strong>Skills Needed:   </strong> {renderSkills(task.skillsNeeded)}
             </Typography>
           </Typography>
   
@@ -87,8 +114,26 @@ const AssignedTaskModal = ({ task, open, onClose, commentsData, addComment, dele
             flexDirection: 'row',
             justifyContent: 'space-between',
             }}>
-            <strong>Priority: <Chip label={task.priority} sx={{ bgcolor: `${task.priorityColor}`, color: 'common.white' }} /></strong> 
-            <strong>Status: <Chip label={task.status} sx={{ bgcolor: `${task.statusColor}`, color: 'common.white' }} /></strong> 
+            <strong>Priority:  <Chip
+                              label={task.priority}
+                              size="medium"
+                              sx={{
+                                bgcolor: theme.priority[task.priority],
+                                color: "common.white",
+                                m: 0.1,
+                                fontSize: "0.8rem",
+                              }}
+                            /></strong> 
+            <strong>Status:  <Chip
+                              label={task.status}
+                              size="medium"
+                              sx={{
+                                bgcolor: theme.status[task.status],
+                                color: "common.white",
+                                m: 0.1,
+                                fontSize: "0.8rem",
+                              }}
+                            /></strong> 
           </Typography>
           <Typography variant="subtitle1" component="div" sx={{ mb: 1 }}>
             <strong>Assignee:</strong> {task.assignee.username || 'Unassigned'}

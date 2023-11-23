@@ -35,9 +35,9 @@ const TaskAssigned = ({ tasks }) => {
   // Define a theme object or use ThemeProvider to globally define these
   const theme = {
     status: {
-      open: blue[500],
+      "open": blue[500],
       "in progress": orange[500],
-      completed: green[500],
+      "completed": green[500],
       "on hold": red[500],
     },
     priority: {
