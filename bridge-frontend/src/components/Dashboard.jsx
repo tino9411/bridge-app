@@ -1,3 +1,5 @@
+// Dashboard.jsx
+// Desc: This file contains the Dashboard component which is the main page of the application.
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import ProjectCard from './project/ProjectCard';
