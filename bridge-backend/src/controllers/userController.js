@@ -184,7 +184,10 @@ exports.getAssignedTasks = async (req, res) => {
         const user = await User.findOne({ username: username })
                                 .populate({
                                     path: 'assignedTasks',
-                                    populate: { path: 'project', select: 'name' } // Populating project name
+                                    populate: [
+                                      { path: 'project', select: 'name' }, // Populating project name
+                                      { path: 'assignee', select: 'username' } // Populating assignee's username
+                                    ]
                                 });
         if (!user) {
             return res.status(404).json({ error: 'User not found' });
@@ -194,4 +197,5 @@ exports.getAssignedTasks = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
+
 

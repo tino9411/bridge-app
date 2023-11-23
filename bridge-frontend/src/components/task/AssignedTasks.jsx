@@ -16,42 +16,28 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
-  Alert
-
+  Alert,
 } from "@mui/material";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
-import { green, orange, red, blue, grey } from "@mui/material/colors";
 import AssignedTaskModal from "./AssignedTaskModal";
 import axios from "axios";
-
+import { formatDate } from "../../utils/dateUtils";
+import { useTheme } from "@mui/material/styles";
+import { sortTasks, filterTasks } from "../../utils/taskUtils";
+import useFetchData from "../../hooks/useFetchData";
+import useComments from "../../hooks/useComments";
 
 const TaskAssigned = ({ tasks }) => {
   const [sortField, setSortField] = useState("dueDate"); // default sorting by dueDate
   const [filterStatus, setFilterStatus] = useState(""); // no filter by default
   const [selectedTask, setSelectedTask] = useState(null); // State for the selected task
-  const [comments, setComments] = useState([]); // State to store comments
-  const [author, setAuthor] = useState(""); // State to store author
+  const token = localStorage.getItem("token"); // Replace with your token retrieval method
   const [error, setError] = useState(""); // State to store error
+  const { data: currentUser, error: userError } = useFetchData("http://localhost:3000/users/profile", token);
+  const [comments, setComments] = useComments(selectedTask ? selectedTask._id : null, token);
 
   // Define a theme object or use ThemeProvider to globally define these
-  const theme = {
-    status: {
-      "open": blue[500],
-      "in progress": orange[500],
-      "completed": green[500],
-      "on hold": red[500],
-    },
-    priority: {
-      low: green[700],
-      medium: orange[700],
-      high: red[700],
-      new: grey[700],
-    },
-
-    title: {
-      fontSize: 12,
-    },
-  };
+  const theme = useTheme();
 
   // Handler for changing sort field
   const handleSortChange = (event) => {
@@ -63,25 +49,9 @@ const TaskAssigned = ({ tasks }) => {
     setFilterStatus(event.target.value);
   };
 
-  // Sorting function
-  const sortTasks = (a, b) => {
-    if (sortField === "rate") {
-      return (a.rate || 0) - (b.rate || 0); // Handle null values
-    } else if (sortField === "dueDate") {
-      return new Date(a.dueDate) - new Date(b.dueDate);
-    }
-    // Add other sorting logic here
-  };
-
-  // Filtering function
-  const filterTasks = (task) => {
-    return filterStatus ? task.status === filterStatus : true;
-  };
-
-  // Apply sorting and filtering
-  const sortedAndFilteredTasks = tasks
-    .filter(filterTasks)
-    .sort(sortTasks)
+// Inside your component
+const sortedAndFilteredTasks = tasks 
+  ? sortTasks(filterTasks(tasks, filterStatus), sortField)
     .reduce((acc, task) => {
       const projectName = task.project.name;
       if (!acc[projectName]) {
@@ -89,15 +59,8 @@ const TaskAssigned = ({ tasks }) => {
       }
       acc[projectName].push(task);
       return acc;
-    }, {});
-
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    const day = String(date.getDate()).padStart(2, "0");
-    const month = String(date.getMonth() + 1).padStart(2, "0"); // Months are 0-based
-    const year = date.getFullYear();
-    return `${day}-${month}-${year}`;
-  };
+    }, {})
+  : {};
 
   const handleTaskClick = (task) => {
     setSelectedTask(task); // Set the selected task
@@ -107,88 +70,38 @@ const TaskAssigned = ({ tasks }) => {
     setSelectedTask(null); // Reset the selected task when the modal is closed
   };
 
- // Function to fetch comments from the database
-const fetchComments = async () => {
-    try {
-      const token = localStorage.getItem("token"); // Replace with your token retrieval method
-      const response = await axios.get(
-        `http://localhost:3000/tasks/${selectedTask._id}/comments`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`, // Ensure the API requires authorization
-          },
-        }
-      );
-  
-      // Parse each comment to extract the username from the author object
-      const parsedComments = response.data.map(comment => ({
-        ...comment,
-        author: comment.author.username, // Replace the author object with just the username
-      }));
-  
-      setComments(parsedComments); // Set the parsed comments to state
-    } catch (err) {
-        setError(err.response?.data?.error || "Error fetching comments");
-    }
-  };
-  
 
-  useEffect(() => { 
-    if (selectedTask) {
-        fetchComments();
-    }
-}, [selectedTask]);
-
-  
-
-  //Function to set author as user's username
-  const fetchCurrentUser = async () => {
-    const token = localStorage.getItem("token");
-    try {
-      const response = await axios.get("http://localhost:3000/users/profile", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setAuthor(response.data.username);
-    } catch (err) {
-      console.error("Failed to fetch user info", err);
-    }
-  };
-
-useEffect(() => {
-    fetchCurrentUser();
-}, []);
-
-const addComment = async (commentData) => {
+  const addComment = async (commentData) => {
     try {
       const token = localStorage.getItem("token"); // Replace with your token retrieval method
       // Submit the new comment to the server
-      await axios.post(`http://localhost:3000/tasks/${selectedTask._id}/comments`, commentData, {
-        headers: {
-          Authorization: `Bearer ${token}`, // Include the authorization header
-        },
-      });
+      await axios.post(
+        `http://localhost:3000/tasks/${selectedTask._id}/comments`,
+        commentData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`, // Include the authorization header
+          },
+        }
+      );
       // If successful, you may want to fetch comments again to update the list
     } catch (err) {
       // If unsuccessful, display an error message
       setError(err.response?.data?.error || "Error adding comment");
-    } 
+    }
   };
-  
 
   // Function to add a new comment to state and to the database
-const handleAddComment = (newCommentText) => {
+  const handleAddComment = (newCommentText) => {
     const newComment = {
-      author: author,
+      author: currentUser.username,
       content: newCommentText,
     };
-  
+
     const updatedComments = [...comments, newComment];
     setComments(updatedComments); // Update local state
     addComment({ content: newCommentText }); // Send the correct object structure to the API
   };
-  
-  
-
 
   // Function to delete a comment
   const handleDeleteComment = (commentId) => {
@@ -197,6 +110,11 @@ const handleAddComment = (newCommentText) => {
     );
     setComments(updatedComments);
   };
+  
+  if (!tasks || !currentUser) {
+    return <div>Loading...</div>; // or any other placeholder
+  }
+  
 
   return (
     <Card
@@ -234,6 +152,7 @@ const handleAddComment = (newCommentText) => {
           >
             <MenuItem value="dueDate">Due Date</MenuItem>
             <MenuItem value="rate">Rate</MenuItem>
+            <MenuItem value="default">Default</MenuItem>
             {/* Add other sort options here */}
           </Select>
         </FormControl>
@@ -296,7 +215,7 @@ const handleAddComment = (newCommentText) => {
                               label={task.status}
                               size="small"
                               sx={{
-                                bgcolor: theme.status[task.status],
+                                bgcolor: theme.palette.status[task.status],
                                 color: "common.white",
                                 m: 0.1,
                                 fontSize: "0.6rem",
@@ -306,7 +225,7 @@ const handleAddComment = (newCommentText) => {
                               label={task.priority}
                               size="small"
                               sx={{
-                                bgcolor: theme.priority[task.priority],
+                                bgcolor: theme.palette.priority[task.priority],
                                 color: "common.white",
                                 m: 0.1,
                                 fontSize: "0.6rem",
@@ -363,10 +282,10 @@ const handleAddComment = (newCommentText) => {
         />
       )}
       {error && (
-          <Alert severity="error" sx={{ mt: 3 }}>
-            {error}
-          </Alert>
-        )}
+        <Alert severity="error" sx={{ mt: 3 }}>
+          {error}
+        </Alert>
+      )}
     </Card>
   );
 };

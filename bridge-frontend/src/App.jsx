@@ -1,5 +1,7 @@
 //App.jsx
 import React, { useState, useEffect } from 'react';
+import { ThemeProvider } from '@mui/material/styles';
+import theme from './utils/theme';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './components/user/Login';
 import Register from './components/user/Register';
@@ -7,8 +9,7 @@ import UserProfile from './components/user/UserProfile';
 import Dashboard from './components/Dashboard';
 import Layout from './components/Layout';
 import Project from './components/project/Project';
-import EditProject from './components/project/EditProject';
-import CreateTask from './components/task/CreateTask';
+import EditProject from './components/project/EditProject'
 import TaskList from './components/task/TaskList';
 import ProjectList from './components/project/ProjectList';
 
@@ -38,6 +39,7 @@ const App = () => {
   };
 
   return (
+    <ThemeProvider theme={theme}>
     <Router>
       <Routes>
         <Route path="/" element={<Navigate replace to="/dashboard" />} />
@@ -75,12 +77,12 @@ const App = () => {
         } />
         <Route path="/create-task/:projectId" element={
           <Layout isAuthenticated={isAuthenticated} onLogout={handleLogout}>
-            <CreateTask />
           </Layout>
         } />
         {/* Add more routes as needed */}
       </Routes>
     </Router>
+    </ThemeProvider>
   );
 };
 

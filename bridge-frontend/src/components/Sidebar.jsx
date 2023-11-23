@@ -1,66 +1,82 @@
-// Sidebar.jsx
 import React from 'react';
-import { House, Speedometer2, Person } from 'react-bootstrap-icons';
-import { Link, useNavigate } from 'react-router-dom';
-import { Dropdown } from 'react-bootstrap';
-import './Sidebar.css'; // Import the Sidebar CSS
-import './Dashboard.jsx'; // Import the Dashboard component
+import { useNavigate, Link } from 'react-router-dom';
+import {
+  Drawer,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+  Divider,
+  Avatar,
+  Box,
+  Typography,
+  IconButton
+} from '@mui/material';
+import HomeIcon from '@mui/icons-material/Home';
+import DashboardIcon from '@mui/icons-material/Dashboard';
+import AssignmentIcon from '@mui/icons-material/Assignment';
+import GroupIcon from '@mui/icons-material/Group';
+import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 
 const Sidebar = ({ onLogout }) => {
-    const navigate = useNavigate();
-  
-    const handleLogout = () => {
-      if (typeof onLogout === 'function') {
-        onLogout();
-        navigate('/login');
-      } else {
-        console.error('Logout function not provided');
-        // Handle the lack of onLogout function
-      }
-    };
-  return (
-    <div className="d-flex flex-column flex-shrink-0 p-3 text-white bg-dark" style={{ width: '280px' }}>
-      <a href="/" className="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
-        <svg className="bi me-2" width="40" height="32"><use xlinkHref="#bootstrap"/></svg>
-        <span className="fs-4">Bridge.io</span>
-      </a>
-      <hr/>
-      <ul className="nav nav-pills flex-column mb-auto">
-        <li className="nav-item">
-          <Link to="/" className="nav-link active" aria-current="page">
-            <House className="bi me-2" size={16} />
-            Dashboard
-          </Link>
-        </li>
-        <li>
-          <Link to="/projects" className="nav-link text-white">
-            <Speedometer2 className="bi me-2" size={16} />
-            Projects
-          </Link>
-        </li>
-        <li>
-          <Link to="/team" className="nav-link text-white">
-            <Person className="bi me-2" size={16} />
-            Team
-          </Link>
-        </li>
-        {/* ... other sidebar items ... */}
-      </ul>
-      <hr/>
-      <Dropdown as="ul" className="mb-3">
-        <Dropdown.Toggle as="a" className="d-flex align-items-center text-white text-decoration-none">
-          <img src="user_avatar.png" alt="" width="32" height="32" className="rounded-circle me-2"/>
-          <strong>User</strong>
-        </Dropdown.Toggle>
+  const navigate = useNavigate();
 
-        <Dropdown.Menu className="dropdown-menu-dark text-small shadow">
-          <Dropdown.Item as={Link} to="/user-profile">Profile</Dropdown.Item>
-          <Dropdown.Item as={Link} to="/settings">Settings</Dropdown.Item>
-          <Dropdown.Divider />
-          <Dropdown.Item onClick={handleLogout}>Sign out</Dropdown.Item>
-        </Dropdown.Menu>
-      </Dropdown>
-    </div>
+  const handleLogout = () => {
+    if (typeof onLogout === 'function') {
+      onLogout();
+      navigate('/login');
+    } else {
+      console.error('Logout function not provided');
+    }
+  };
+
+  return (
+    <Drawer
+      variant="permanent"
+      sx={{
+        width: 280,
+        flexShrink: 0,
+        '& .MuiDrawer-paper': {
+          width: 280,
+          boxSizing: 'border-box',
+        },
+      }}
+    >
+      <Box sx={{ display: 'flex', alignItems: 'center', p: 2 }}>
+        {/* Logo and Title */}
+        <Avatar sx={{ mr: 1 }}>B</Avatar>
+        <Typography variant="h6">Bridge.io</Typography>
+      </Box>
+      <Divider />
+      <List>
+        {/* Sidebar Items */}
+        <ListItem button component={Link} to="/">
+          <ListItemIcon><HomeIcon /></ListItemIcon>
+          <ListItemText primary="Dashboard" />
+        </ListItem>
+        <ListItem button component={Link} to="/projects">
+          <ListItemIcon><DashboardIcon /></ListItemIcon>
+          <ListItemText primary="Projects" />
+        </ListItem>
+        <ListItem button component={Link} to="/tasks">
+          <ListItemIcon><AssignmentIcon /></ListItemIcon>
+          <ListItemText primary="Tasks" />
+        </ListItem>
+        <ListItem button component={Link} to="/team">
+          <ListItemIcon><GroupIcon /></ListItemIcon>
+          <ListItemText primary="Team" />
+        </ListItem>
+      </List>
+      <Divider />
+      <Box sx={{ flexGrow: 1 }} />
+      <List>
+        {/* Logout */}
+        <ListItem button onClick={handleLogout}>
+          <ListItemIcon><ExitToAppIcon /></ListItemIcon>
+          <ListItemText primary="Logout" />
+        </ListItem>
+      </List>
+    </Drawer>
   );
 };
 

@@ -1,10 +1,6 @@
-/* Layout.css */
-
-.d-flex {
-    display: flex;
-  }
-  
-  .flex-grow-1 {
-    flex-grow: 1;
-  }
-  
+main.flex-grow-1 {
+  flex-grow: 1;
+  min-height: 100vh; /* Make sure it fills at least the viewport height */
+  display: flex;
+  flex-direction: column; /* Stack children vertically */
+}

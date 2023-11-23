@@ -1,5 +1,5 @@
 // TaskComment.jsx
-import React, { useState } from "react";
+import React, { useState, useCallback, memo } from "react";
 import {
   List,
   ListItem,
@@ -8,7 +8,6 @@ import {
   ListItemText,
   Typography,
   TextField,
-  Button,
   Divider,
   Box,
   Stack,
@@ -22,41 +21,41 @@ import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import CloseIcon from '@mui/icons-material/Close'
 import axios from "axios";
 
-const TaskComment = ({ commentsData, taskId }) => {
+/**
+ * TaskComment component displays a list of comments and allows users to add new comments and replies.
+ * 
+ * @component
+ * @param {Object[]} commentsData - The array of comments data.
+ * @param {string} taskId - The ID of the task associated with the comments.
+ * @returns {JSX.Element} The TaskComment component.
+ */
+
+const TaskComment = memo(({ commentsData, taskId }) => {
   const [newComment, setNewComment] = useState("");
   const [replyContent, setReplyContent] = useState("");
   const [replyTo, setReplyTo] = useState(null);
   const [expandedComments, setExpandedComments] = useState(new Set());
-  
-  
+  console.log(commentsData);
 
-  // Submit a top-level comment
-  const handleCommentSubmit = () => {
-    submitComment({ content: newComment }, taskId);
-    setNewComment("");
-  };
+// useCallback ensures these functions are not recreated on every render
+const handleCommentSubmit = useCallback(() => {
+  submitComment({ content: newComment }, taskId);
+  setNewComment("");
+}, [newComment, taskId]);
 
-  // Submit a reply to a comment
-  const handleReplySubmit = (commentId) => {
-    submitCommentReply(
-      { content: replyContent, parentComment: commentId },
-      taskId
-    );
-    setReplyContent("");
-    setReplyTo(null);
-  };
+const handleReplySubmit = useCallback((commentId) => {
+  submitCommentReply({ content: replyContent, parentComment: commentId }, taskId);
+  setReplyContent("");
+  setReplyTo(null);
+}, [replyContent, taskId]);
 
-  const toggleExpandComment = (commentId) => {
-    setExpandedComments((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(commentId)) {
-        newSet.delete(commentId);
-      } else {
-        newSet.add(commentId);
-      }
-      return newSet;
-    });
-  };
+const toggleExpandComment = useCallback((commentId) => {
+  setExpandedComments((prev) => {
+    const newSet = new Set(prev);
+    newSet.has(commentId) ? newSet.delete(commentId) : newSet.add(commentId);
+    return newSet;
+  });
+}, []);
 
   const submitComment = async (commentData, taskId) => {
     try {
@@ -137,7 +136,7 @@ const TaskComment = ({ commentsData, taskId }) => {
         </ListItemAvatar>
         <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column' }}>
         <ListItemText
-          primary={comment.author}
+          primary={comment.author.username}
           secondary={
             <>
               {/* Comment text and metadata */}
@@ -213,11 +212,8 @@ const TaskComment = ({ commentsData, taskId }) => {
     );
   };
 
-
-
-  const renderComments = () => {
-    return commentsData
-      .filter((comment) => !comment.parentComment)
+  const renderComments = useCallback(() => {
+    return commentsData.filter((comment) => !comment.parentComment)
       .map((comment) => (
         <React.Fragment key={comment._id}>
           {renderCommentItem(comment)}
@@ -228,7 +224,7 @@ const TaskComment = ({ commentsData, taskId }) => {
           )}
         </React.Fragment>
       ));
-  };
+  }, [commentsData, expandedComments, renderCommentItem, renderReplies]);
 
   return (
     <Box sx={{ width: "100%" }}>
@@ -262,6 +258,6 @@ const TaskComment = ({ commentsData, taskId }) => {
       </Stack>
     </Box>
   );
-};
+});
 
 export default TaskComment;

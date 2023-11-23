@@ -1,112 +1,151 @@
-// TaskModal.jsx
 import React from "react";
-import "./TaskModal.css";
-import "./TaskCard.css";
+import {
+  CardContent,
+  CardHeader,
+  IconButton,
+  Typography,
+  Chip,
+  Box,
+} from "@mui/material";
+import { conditionalRender } from '../../utils/renderUtils';
+import CloseIcon from "@mui/icons-material/Close";
+import TaskComment from "../comment/TaskComment";
+import { StyledCard } from '../../utils/cardUtils';
+import { StyledModal } from "../../utils/modalUtils";
+import typographyStyles from '../../utils/typographyStyles';
+import { formatDate } from '../../utils/dateUtils';
+import { renderSkillsAsChips } from '../../utils/chipUtils';
+import { useTheme } from '@mui/material/styles';
 
-const TaskModal = ({ task, onClose }) => {
+const TaskModal = ({ 
+    task, 
+    onClose,
+    commentsData,
+    addComment,
+    deleteComment,
+ }) => {
 
-    if (!task) return null; // Don't render if no task is selected
 
-    // Format date to DD-MM-YYYY
-  const formatDate = (isoDate) => {
-    if (!isoDate) return ""; // Return empty string if no date provided
+    const theme = useTheme();
 
-    const date = new Date(isoDate);
-    const day = date.getDate().toString().padStart(2, "0");
-    const month = (date.getMonth() + 1).toString().padStart(2, "0"); // +1 because months are 0-indexed
-    const year = date.getFullYear();
-    return `${day}-${month}-${year}`;
-  };
+  if (!task) return null;
 
-  const formattedTask = {
-    ...task,
-    dueDate: formatDate(task.dueDate),
-    createdAt: formatDate(task.createdAt),
-    updatedAt: formatDate(task.updatedAt),
-    project: task.project ? task.project.name : "No project",
-    assignee: task.assignee ? task.assignee.username : "Unassigned"
-  };
-  // Render each skill as a tag
-  const renderSkills = (skills) => {
-    return skills.map((skill, index) => (
-      <span key={index} className="task-skill-tag">
-        {skill}
-      </span>
-    ));
-  };
-
-  
 
   return (
-    <div className="task-modal-overlay" onClick={onClose}>
-      <div className="task-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="task-modal-header">
-          <h2 className="task-modal-title">{task.title}</h2>
-          <button onClick={onClose} className="task-modal-close-btn">
-            &times;
-          </button>
-        </div>
-        <div className="task-modal-body">
-          {/* Task details here */}
-          <div className="task-modal-body-1">
-            <p>
+    <StyledModal
+      open={Boolean(task)}
+      onClose={onClose}
+    >
+      <StyledCard>
+      <CardHeader
+          action={
+            <IconButton onClick={onClose}>
+              <CloseIcon />
+            </IconButton>
+          }
+          title={
+            <Typography variant="h6" sx={typographyStyles.boldTitle}>
+              {task.title}
+            </Typography>
+          }
+          sx={{ borderBottom: "1px solid #ddd", pb: 2 }}
+        />
+        <CardContent sx={{ pt: 2, p: 2, m: 2 }}>
+          <Typography
+            variant="subtitle1"
+            component="div"
+            sx={{
+              mb: 1,
+              display: "flex",
+              flexDirection: "row",
+              justifyContent: "space-between",
+            }}
+          >
+            <Typography variant="subtitle1" component="div" sx={{ mb: 1 }}>
               <strong>Project:</strong> {task.project.name}
-            </p>
-            <p>
-              <strong>Status:</strong>{" "}
-              <span
-                className={`task-status-badge ${task.status.toLowerCase()}`}
-              >
-                {task.status}{" "}
-              </span>
-            </p>
-          </div>
-          <div className="task-modal-body-description">
-            <p>
-              <strong>Description:</strong> {task.description}
-            </p>
-          </div>
-          <div className="task-modal-body-2">
-            <p>
-              <strong>Priority:</strong>{" "}
-              <span
-                className={`task-priority-badge ${task.priority.toLowerCase()}`}
-              >
-                {task.priority}{" "}
-              </span>
-            </p>
-            <p>
-              <strong>Phase:</strong> {task.phase}
-            </p>
-            <p>
-              <div>
-                {" "}
-                <strong>Skills Needed:</strong>
-                {renderSkills(task.skillsNeeded)}
-              </div>
-            </p>
-          </div>
-          <div className="task-modal-body-3">
-            <p>
-              <strong>Assignee:</strong>{" "}
-              {task.assignee ? task.assignee.username : "Unassigned"}
-            </p>
+            </Typography>
+            <Typography
+              variant="subtitle1"
+              component="div"
+              sx={{
+                display: "flex",
+                alignItems: "center", // Align items vertically
+                marginRight: 1, // Add right margin
+                mb: 1,
+                  
+              }}
+            >
+            <Typography variant="subtitle1" component="strong" sx={{ mr: 1 }}>
+              <strong>Skills Needed: </strong>{" "}
+              </Typography>
+              {/* Add right margin */}
+              {renderSkillsAsChips(task.skillsNeeded)}
+            </Typography>
+          </Typography>
 
-            <p>
-              <strong>Due Date:</strong> {formattedTask.dueDate}
-            </p>
-            <p>
-              <strong>Rate:</strong> {task.rate}
-            </p>
-          </div>
-        </div>
-        <div className="task-modal-footer">
-          {/* Footer content here */}
-          <p>Created at: {formattedTask.createdAt}</p>
-          <p>Updated at: {formattedTask.updatedAt}</p>
-        </div>
-      </div>
-    </div>
+          <Typography variant="subtitle1" component="div" sx={{ mb: 1 }}>
+            <strong>Description:</strong> {task.description}
+          </Typography>
+          <Typography
+            variant="subtitle1"
+            component="div"
+            sx={{
+              mb: 1,
+              display: "flex",
+              flexDirection: "row",
+              justifyContent: "space-between",
+            }}
+          >
+            <strong>
+              Priority:{" "}
+              <Chip
+                label={task.priority}
+                size="medium"
+                sx={{
+                  bgcolor: theme.palette.priority[task.priority],
+                  color: "common.white",
+                  m: 0.1,
+                  fontSize: "0.8rem",
+                }}
+              />
+            </strong>
+            <strong>
+              Status:{" "}
+              <Chip
+                label={task.status}
+                size="medium"
+                sx={{
+                  bgcolor: theme.palette.status[task.status],
+                  color: "common.white",
+                  m: 0.1,
+                  fontSize: "0.8rem",
+                }}
+              />
+            </strong>
+          </Typography>
+          <Typography variant="subtitle1" component="div" sx={{ mb: 1 }}>
+          <strong>Assignee:</strong> {task.assignee && task.assignee.username ? task.assignee.username : "Unassigned"}
+
+
+
+</Typography>
+          <Typography variant="subtitle1" component="div" sx={{ mb: 1 }}>
+            <strong>Due Date:</strong> {formatDate(task.dueDate)}
+          </Typography>
+          <Typography variant="subtitle1" component="div" sx={{ mb: 1 }}>
+            <strong>Rate:</strong> {task.rate || "N/A"}
+          </Typography>
+            {conditionalRender(task,
+              <TaskComment
+            commentsData={commentsData}
+            onSubmitComment={addComment}
+            onDeleteComment={deleteComment}
+            taskId={task._id}
+          /> )}    
+          
+        </CardContent>
+      </StyledCard>
+    </StyledModal>
   );
 };
 

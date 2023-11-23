@@ -1,7 +1,5 @@
 //AssignedTaskModal.jsx
-import React from "react";
-import Modal from "@mui/material/Modal";
-import Card from "@mui/material/Card";
+import React, { memo } from "react";
 import CardHeader from "@mui/material/CardHeader";
 import CardContent from "@mui/material/CardContent";
 import Typography from "@mui/material/Typography";
@@ -10,9 +8,15 @@ import CloseIcon from "@mui/icons-material/Close";
 import Chip from "@mui/material/Chip";
 import Box from "@mui/material/Box";
 import TaskComment from "../comment/TaskComment";
-import { green, orange, red, blue, grey } from "@mui/material/colors";
+import { formatDate } from '../../utils/dateUtils';
+import { renderSkillsAsChips } from '../../utils/chipUtils';
+import { conditionalRender } from '../../utils/renderUtils';
+import typographyStyles from '../../utils/typographyStyles';
+import { StyledCard } from '../../utils/cardUtils';
+import { StyledModal } from "../../utils/modalUtils";
+import { useTheme } from '@mui/material/styles';
 
-const AssignedTaskModal = ({
+const AssignedTaskModal = memo(({
   task,
   open,
   onClose,
@@ -20,72 +24,17 @@ const AssignedTaskModal = ({
   addComment,
   deleteComment,
 }) => {
-  if (!task) return null;
+ 
+  const theme = useTheme();
 
-  // Define a theme object or use ThemeProvider to globally define these
-  const theme = {
-    status: {
-      open: blue[500],
-      "in progress": orange[500],
-      completed: green[500],
-      "on hold": red[500],
-    },
-    priority: {
-      low: green[700],
-      medium: orange[700],
-      high: red[700],
-      new: grey[700],
-    },
 
-    title: {
-      fontSize: 12,
-    },
-  };
-
-  // Function to format dates
-  const formatDate = (isoDate) =>
-    new Date(isoDate).toLocaleDateString("en-US", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
-
-  // Function to render skills as chips
-  const renderSkills = (skillsNeeded) => (
-    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-      {skillsNeeded.map((skillsNeeded, index) => (
-        <Chip
-          key={index}
-          label={skillsNeeded}
-          sx={{ bgcolor: "primary.main", color: "common.white" }}
-        />
-      ))}
-    </Box>
-  );
-
+ 
   return (
-    <Modal
-      open
+    <StyledModal
+      open = {open}
       onClose={onClose}
-      aria-labelledby="task-modal-title"
-      aria-describedby="task-modal-description"
-      sx={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        p: 1,
-      }}
     >
-      <Card
-        sx={{
-          width: "80%",
-          maxWidth: 1000,
-          maxHeight: "100%",
-          bgcolor: "background.paper",
-          borderRadius: 5,
-          boxShadow: 24,
-        }}
-      >
+      <StyledCard>
         <CardHeader
           action={
             <IconButton onClick={onClose}>
@@ -93,7 +42,7 @@ const AssignedTaskModal = ({
             </IconButton>
           }
           title={
-            <Typography variant="h6" sx={{ fontWeight: "bold" }}>
+            <Typography variant="h6" sx={typographyStyles.boldTitle}>
               {task.title}
             </Typography>
           }
@@ -128,7 +77,7 @@ const AssignedTaskModal = ({
               <strong>Skills Needed: </strong>{" "}
               </Typography>
               {/* Add right margin */}
-              {renderSkills(task.skillsNeeded)}
+              {renderSkillsAsChips(task.skillsNeeded)}
             </Typography>
           </Typography>
 
@@ -151,7 +100,7 @@ const AssignedTaskModal = ({
                 label={task.priority}
                 size="medium"
                 sx={{
-                  bgcolor: theme.priority[task.priority],
+                  bgcolor: theme.palette.priority[task.priority],
                   color: "common.white",
                   m: 0.1,
                   fontSize: "0.8rem",
@@ -164,7 +113,7 @@ const AssignedTaskModal = ({
                 label={task.status}
                 size="medium"
                 sx={{
-                  bgcolor: theme.status[task.status],
+                  bgcolor: theme.palette.status[task.status],
                   color: "common.white",
                   m: 0.1,
                   fontSize: "0.8rem",
@@ -173,21 +122,25 @@ const AssignedTaskModal = ({
             </strong>
           </Typography>
           <Typography variant="subtitle1" component="div" sx={{ mb: 1 }}>
-            <strong>Assignee:</strong> {task.assignee.username || "Unassigned"}
-          </Typography>
+          <strong>Assignee:</strong> {task.assignee && task.assignee.username ? task.assignee.username : "Unassigned"}
+
+
+
+</Typography>
           <Typography variant="subtitle1" component="div" sx={{ mb: 1 }}>
             <strong>Due Date:</strong> {formatDate(task.dueDate)}
           </Typography>
           <Typography variant="subtitle1" component="div" sx={{ mb: 1 }}>
             <strong>Rate:</strong> {task.rate || "N/A"}
           </Typography>
-
-          <TaskComment
+            {conditionalRender(task,
+              <TaskComment
             commentsData={commentsData}
             onSubmitComment={addComment}
             onDeleteComment={deleteComment}
             taskId={task._id}
-          />
+          /> )}    
+          
         </CardContent>
         <Box
           sx={{
@@ -205,9 +158,9 @@ const AssignedTaskModal = ({
             <strong>Updated at:</strong> {formatDate(task.updatedAt)}
           </Typography>
         </Box>
-      </Card>
-    </Modal>
+      </StyledCard>
+    </StyledModal>
   );
-};
+});
 
 export default AssignedTaskModal;
