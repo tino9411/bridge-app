@@ -196,27 +196,36 @@ exports.addPhaseToProject = async (req, res) => {
     }
   };
   
-  // Function to update a specific phase of a project
-  exports.updatePhase = async (req, res) => {
-    const { projectId, phaseId } = req.params;
-    const phaseUpdate = req.body;
-  
-    try {
-      const project = await Project.findOneAndUpdate(
-        { "_id": projectId, "phases._id": phaseId },
-        { $set: { "phases.$": phaseUpdate } },
-        { new: true, runValidators: true }
-      );
-  
-      if (!project) {
-        return res.status(404).json({ error: 'Phase not found' });
-      }
-  
-      res.status(200).json(project);
-    } catch (error) {
-      res.status(400).json({ error: error.message });
+ // Function to update a specific phase of a project
+exports.updatePhase = async (req, res) => {
+  const { projectId, phaseId } = req.params;
+  const phaseUpdate = req.body;
+
+  try {
+    // Building an update object dynamically
+    let updateObject = {};
+    for (const [key, value] of Object.entries(phaseUpdate)) {
+      updateObject[`phases.$.${key}`] = value;
     }
-  };
+
+    const project = await Project.findOneAndUpdate(
+      { "_id": projectId, "phases._id": phaseId },
+      { $set: updateObject },
+      { new: true, runValidators: true }
+    );
+
+    if (!project) {
+      return res.status(404).json({ error: 'Project or phase not found' });
+    }
+
+    // Find the updated phase to return
+    const updatedPhase = project.phases.id(phaseId);
+    res.status(200).json(updatedPhase);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
+
   
   // Function to delete a specific phase of a project
   exports.deletePhase = async (req, res) => {
@@ -242,72 +251,87 @@ exports.addPhaseToProject = async (req, res) => {
 
 // Add a new milestone to a specific phase of a project
 exports.addMilestoneToProject = async (req, res) => {
-    try {
-        const { projectId, phaseId } = req.params; // Assume you now pass phaseId in the request
-        const { title, dueDate } = req.body;
+  try {
+      const { projectId, phaseId } = req.params;
+      const { title, dueDate } = req.body;
 
-        // Find the project and the specific phase to add the milestone to
-        const project = await Project.findById(projectId);
-        if (!project) {
-            return res.status(404).json({ error: 'Project not found' });
-        }
+      // Find the project and the specific phase to add the milestone to
+      const project = await Project.findById(projectId);
+      if (!project) {
+          return res.status(404).json({ error: 'Project not found' });
+      }
 
-        // Find the specific phase in the project
-        const phase = project.phases.id(phaseId);
-        if (!phase) {
-            return res.status(404).json({ error: 'Phase not found' });
-        }
+      // Find the specific phase in the project
+      const phase = project.phases.id(phaseId);
+      if (!phase) {
+          return res.status(404).json({ error: 'Phase not found' });
+      }
 
-        // Add the new milestone to the phase's milestones array
-        phase.milestones.push({ title, dueDate });
+      // Add the new milestone to the phase's milestones array
+      phase.milestones.push({ title, dueDate });
 
-        // Save the updated project
-        await project.save();
+      // Save the updated project
+      await project.save();
 
-        res.status(201).json(phase.milestones);
-    } catch (error) {
-        res.status(400).json({ error: error.message });
-    }
+      res.status(201).json({ message: 'Milestone added successfully', phase: phase });
+  } catch (error) {
+      res.status(400).json({ error: error.message });
+  }
 };
 
 
 // Update a milestone within a project
 exports.updateMilestone = async (req, res) => {
-    try {
-        const { projectId, phaseId, milestoneId } = req.params;
-        const { title, dueDate, completed } = req.body;
+  try {
+      const { projectId, phaseId, milestoneId } = req.params;
+      const { title, dueDate, completed } = req.body;
 
-        // Find the project and the specific phase
-        const project = await Project.findById(projectId);
-        if (!project) {
-            return res.status(404).json({ error: 'Project not found' });
-        }
+      // Find the project and the specific phase
+      const project = await Project.findById(projectId);
+      if (!project) {
+          return res.status(404).json({ error: 'Project not found' });
+      }
 
-        // Find the specific phase within the project
-        const phase = project.phases.id(phaseId);
-        if (!phase) {
-            return res.status(404).json({ error: 'Phase not found' });
-        }
+      // Find the specific phase within the project
+      const phase = project.phases.id(phaseId);
+      if (!phase) {
+          return res.status(404).json({ error: 'Phase not found' });
+      }
 
-        // Find the specific milestone within the phase
-        const milestone = phase.milestones.id(milestoneId);
-        if (!milestone) {
-            return res.status(404).json({ error: 'Milestone not found' });
-        }
+      // Validate dueDate against phase's start and end dates
+      if (dueDate) {
+          const dueDateObject = new Date(dueDate);
+          if (dueDateObject < phase.startDate || dueDateObject > phase.endDate) {
+              return res.status(400).json({ error: 'Milestone due date must fall within the phase start and end dates' });
+          }
+      }
 
-        // Update the milestone properties
-        milestone.title = title;
-        milestone.dueDate = dueDate;
-        milestone.completed = completed;
+      // Find the specific milestone within the phase
+      const milestone = phase.milestones.id(milestoneId);
+      if (!milestone) {
+          return res.status(404).json({ error: 'Milestone not found' });
+      }
 
-        // Save the changes to the project
-        await project.save();
+      // Conditional updates
+      if (title !== undefined) {
+          milestone.title = title;
+      }
+      if (dueDate !== undefined) {
+          milestone.dueDate = dueDate;
+      }
+      if (completed !== undefined) {
+          milestone.completed = completed;
+      }
 
-        res.status(200).json(milestone);
-    } catch (error) {
-        res.status(400).json({ error: error.message });
-    }
+      // Save the changes to the project
+      await project.save();
+
+      res.status(200).json(milestone);
+  } catch (error) {
+      res.status(400).json({ error: error.message });
+  }
 };
+
 
 
 // Delete a milestone from a project
