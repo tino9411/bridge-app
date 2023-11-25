@@ -17,7 +17,9 @@ const {
     updateMilestone,
     deleteMilestone,
     getProjectsWithTaskCount,
-    getProjectTeamMembers
+    getProjectTeamMembers,
+    assignTaskToPhase,
+    removeTaskFromPhase
   } = require('../controllers/projectController');
 const authMiddleware = require('../middlewares/auth');
 const checkProjectManagerRole = require('../middlewares/checkProjectManagerRole'); // Ensure you have this middleware to check for the project manager role
@@ -52,6 +54,11 @@ router.get('/:projectId/phases/:phaseId', authMiddleware, getPhase);
 router.put('/:projectId/phases/:phaseId', authMiddleware, checkProjectManagerRole, updatePhase);
 router.delete('/:projectId/phases/:phaseId', authMiddleware, checkProjectManagerRole, deletePhase);
 
+// Route to assign a task to a phase
+router.post('/:projectId/phases/:phaseId/tasks/:taskId', authMiddleware, checkProjectManagerRole, assignTaskToPhase);
+
+// Route to remove a task from a phase
+router.delete('/:projectId/phases/:phaseId/tasks/:taskId', authMiddleware, checkProjectManagerRole, removeTaskFromPhase);
 // Route for updating project details like start date, end date, and budget details
 router.patch('/:projectId/details', authMiddleware, checkProjectManagerRole, updateProjectDetails);
 

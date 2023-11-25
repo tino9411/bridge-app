@@ -11,33 +11,55 @@ import {
   IconButton,
   Collapse,
   Box,
-  LinearProgress
+  LinearProgress,
+  Chip
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import AddRoundedIcon from '@mui/icons-material/AddRounded';
+import CreatePhaseModal from './CreatePhaseModal'; // Import the CreatePhaseModal component
+import TaskAssignModal from './TaskAssignModal';
 import { StyledCard } from '../../utils/cardUtils';
 
 const PhaseList = ({ projectId }) => {
   const [phases, setPhases] = useState([]);
   const [expanded, setExpanded] = useState({});
+  const [showCreateModal, setShowCreateModal] = useState(false); // State for CreatePhaseModal visibility
+  const [showTaskAssignModal, setShowTaskAssignModal] = useState(false);
+  const [selectedPhaseId, setSelectedPhaseId] = useState(null);
 
   useEffect(() => {
-    const fetchPhases = async () => {
-      try {
-        const response = await axios.get(`http://localhost:3000/projects/${projectId}/phases`);
-        setPhases(response.data);
-      } catch (err) {
-        console.error('Error fetching phases', err);
-      }
-    };
-
     fetchPhases();
   }, [projectId]);
+
+  const fetchPhases = async () => {
+    try {
+      const response = await axios.get(`http://localhost:3000/projects/${projectId}/phases`);
+      setPhases(response.data);
+    } catch (err) {
+      console.error('Error fetching phases', err);
+    }
+  };
 
   const handleExpandClick = (phaseId) => {
     setExpanded((prevExpanded) => ({
       ...prevExpanded,
       [phaseId]: !prevExpanded[phaseId]
     }));
+  };
+
+  const handleCreatePhaseSubmit = async (newPhaseData) => {
+    try {
+      await axios.post(`http://localhost:3000/projects/${projectId}/phases`, newPhaseData);
+      fetchPhases(); // Refresh the list of phases
+      setShowCreateModal(false);
+    } catch (err) {
+      console.error('Error creating phase', err);
+    }
+  };
+
+  const openTaskAssignModal = (phaseId) => {
+    setSelectedPhaseId(phaseId);
+    setShowTaskAssignModal(true);
   };
 
   return (
@@ -50,7 +72,15 @@ const PhaseList = ({ projectId }) => {
       boxShadow: 3,
       borderRadius: 5,
     }}>
-      <CardHeader title="Phases" />
+      <CardHeader title="Phases" 
+        action={
+          <IconButton aria-label="add-phase"
+          onClick={() => setShowCreateModal(true)}
+          >
+         
+            <AddRoundedIcon />
+          </IconButton>}
+      titleTypographyProps={{ variant: "h6", align: "center" }}/>
       <CardContent>
         <List>
           {phases.map((phase) => (
@@ -64,8 +94,23 @@ const PhaseList = ({ projectId }) => {
               >
                 <ListItemText
                   primary={phase.name}
-                  secondary={`Deadline: ${phase.endDate ? new Date(phase.endDate).toLocaleDateString() : 'N/A'}`}
+                  secondary={
+                    <React.Fragment>
+                      Deadline: {phase.endDate ? new Date(phase.endDate).toLocaleDateString() : 'N/A'}
+                      {/* Display task count in a Chip */}
+                      <Chip 
+                        label={`${phase.assignedTasks.length} Task${phase.assignedTasks.length !== 1 ? 's' : ''}`} 
+                        size="small" 
+                        sx={{ ml: 1 }} 
+                      />
+                       <IconButton onClick={() => openTaskAssignModal(phase._id)}>
+                  <AddRoundedIcon /> {/* Change the icon as needed */}
+                </IconButton>
+                    </React.Fragment>
+                  }
+                  
                 />
+                
               </ListItem>
               <Collapse in={expanded[phase._id]} timeout="auto" unmountOnExit>
                 <Box sx={{ pl: 4, pr: 2, pb: 2 }}>
@@ -83,6 +128,22 @@ const PhaseList = ({ projectId }) => {
             </React.Fragment>
           ))}
         </List>
+         {/* Task Assignment Modal */}
+  {showTaskAssignModal && (
+    <TaskAssignModal
+      open={showTaskAssignModal}
+      onClose={() => setShowTaskAssignModal(false)}
+      projectId={projectId}
+      phaseId={selectedPhaseId}
+      onTaskAssigned={fetchPhases} // Refresh phases list after task assignment
+    />
+  )}
+        <CreatePhaseModal 
+          open={showCreateModal} 
+          onClose={() => setShowCreateModal(false)} 
+          onSubmit={handleCreatePhaseSubmit}
+          projectId={projectId}
+        />
       </CardContent>
     </Card>
   );

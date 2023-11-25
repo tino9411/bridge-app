@@ -65,9 +65,11 @@ const Project = () => {
         <Box sx={{ }}>
         <Typography variant="subtitle1" sx={typographyStyles.projectDates}>
         <Typography variant="body1"
-        sx={typographyStyles.projectDate}><strong>Start Date: </strong> {formatDate(project.startDate)}</Typography>
+        sx={typographyStyles.projectDate}><strong>Start Date: </strong> {formatDate(project.startDate)}
+        </Typography>
         <Typography variant="body1"
-        sx={typographyStyles.projectDate}><strong>End Date: </strong> {formatDate(project.endDate)}</Typography>
+        sx={typographyStyles.projectDate}><strong>End Date: </strong> {formatDate(project.endDate)}
+        </Typography>
         </Typography>
         ,</Box>
         <Box>

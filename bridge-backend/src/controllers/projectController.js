@@ -144,27 +144,30 @@ exports.getProjectTasksWithAssignees = async (req, res) => {
     }
 };
 
-// Additional function to add a phase to a project
 exports.addPhaseToProject = async (req, res) => {
-    const { projectId } = req.params;
-    const { name, startDate, endDate } = req.body; // Assume these are required for a phase
-  
-    try {
-      const project = await Project.findByIdAndUpdate(
-        projectId,
-        { $push: { phases: { name, startDate, endDate } } },
-        { new: true, runValidators: true }
-      );
-  
-      if (!project) {
-        return res.status(404).json({ error: 'Project not found' });
-      }
-  
-      res.status(201).json(project);
-    } catch (error) {
-      res.status(400).json({ error: error.message });
+  const { projectId } = req.params;
+  const phaseData = req.body; // Phase data from the request body
+
+  try {
+    const project = await Project.findById(projectId);
+
+    if (!project) {
+      return res.status(404).json({ error: 'Project not found' });
     }
-  };
+
+    // Add the new phase
+    project.phases.push(phaseData);
+    await project.save();
+
+    // Retrieve the newly added phase (the last element in the phases array)
+    const newPhase = project.phases[project.phases.length - 1];
+
+    res.status(201).json(newPhase); // Return only the new phase
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
+
   
   // Function to get a specific phase of a project
   exports.getPhase = async (req, res) => {
@@ -247,6 +250,86 @@ exports.updatePhase = async (req, res) => {
       res.status(400).json({ error: error.message });
     }
   };
+
+  // In your projectController.js
+
+// Function to assign a task to a phase
+exports.assignTaskToPhase = async (req, res) => {
+  const { projectId, phaseId, taskId } = req.params;
+
+  try {
+    // Fetch the project and the specific phase
+    const project = await Project.findById(projectId);
+    if (!project) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+
+    const phase = project.phases.id(phaseId);
+    if (!phase) {
+      return res.status(404).json({ error: 'Phase not found' });
+    }
+
+    // Check if the task exists and is not already assigned to another phase
+    const task = await Task.findById(taskId);
+    if (!task || task.phase) {
+      return res.status(400).json({ error: 'Invalid task or task already assigned' });
+    }
+
+    // Assign the task to the phase
+    phase.assignedTasks.push(taskId);
+    task.phase = phaseId;
+
+    // Save both the project and the task
+    await project.save();
+    await task.save();
+
+    res.status(200).json({ message: 'Task assigned to phase successfully', phase });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.removeTaskFromPhase = async (req, res) => {
+  const { projectId, phaseId, taskId } = req.params;
+
+  try {
+    // Fetch the project
+    const project = await Project.findById(projectId);
+    if (!project) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+
+    // Find the specific phase
+    const phase = project.phases.id(phaseId);
+    if (!phase) {
+      return res.status(404).json({ error: 'Phase not found' });
+    }
+
+    // Check if the task exists and is assigned to the phase
+    const taskIndex = phase.assignedTasks.indexOf(taskId);
+    if (taskIndex === -1) {
+      return res.status(400).json({ error: 'Task not found in the phase' });
+    }
+
+    // Remove the task from the phase
+    phase.assignedTasks.splice(taskIndex, 1);
+
+    // Update the task's phase reference (optional, based on your schema design)
+    const task = await Task.findById(taskId);
+    if (task) {
+      task.phase = null;
+      await task.save();
+    }
+
+    // Save the project
+    await project.save();
+
+    res.status(200).json({ message: 'Task removed from phase successfully', phase });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 
 
 // Add a new milestone to a specific phase of a project
