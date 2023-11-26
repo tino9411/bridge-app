@@ -1,43 +1,65 @@
+//TaskModal.jsxs
 import React from "react";
+import { Skeleton } from '@mui/material';
 import {
   CardContent,
   CardHeader,
   IconButton,
   Typography,
   Chip,
-  Box,
 } from "@mui/material";
-import { conditionalRender } from '../../utils/renderUtils';
+import { conditionalRender } from "../../utils/renderUtils";
 import CloseIcon from "@mui/icons-material/Close";
 import TaskComment from "../comment/TaskComment";
-import { StyledCard } from '../../utils/cardUtils';
+import { StyledCard } from "../../utils/cardUtils";
 import { StyledModal } from "../../utils/modalUtils";
-import typographyStyles from '../../utils/typographyStyles';
-import { formatDate } from '../../utils/dateUtils';
-import { renderSkillsAsChips } from '../../utils/chipUtils';
-import { useTheme } from '@mui/material/styles';
+import typographyStyles from "../../utils/typographyStyles";
+import { formatDate } from "../../utils/dateUtils";
+import { renderSkillsAsChips } from "../../utils/chipUtils";
+import { useTheme } from "@mui/material/styles";
 
-const TaskModal = ({ 
-    task, 
-    onClose,
-    commentsData,
-    addComment,
-    deleteComment,
- }) => {
+const TaskModal = ({
+  task,
+  onClose,
+  commentsData,
+  addComment,
+  deleteComment,
+  isLoadingComments,
+}) => {
 
+  const theme = useTheme();
 
-    const theme = useTheme();
+  const renderCommentsSection = () => {
+    if (isLoadingComments) {
+      return [...Array(5)].map((_, index) => (
+        <Skeleton key={index} animation="wave" height={40} style={{ marginBottom: 6 }} />
+      ));
+    }
+
+    if (commentsData && commentsData.length > 0) {
+      return (
+        <TaskComment
+          commentsData={commentsData}
+          addComment={addComment}
+          deleteComment={deleteComment}
+          taskId={task._id}
+        />
+      );
+    } else {
+      return (
+        <Typography sx={{ m: 2 }} color="text.secondary">
+          No comments yet.
+        </Typography>
+      );
+    }
+  };
 
   if (!task) return null;
 
-
   return (
-    <StyledModal
-      open={Boolean(task)}
-      onClose={onClose}
-    >
+    <StyledModal open={Boolean(task)} onClose={onClose}>
       <StyledCard>
-      <CardHeader
+        <CardHeader
           action={
             <IconButton onClick={onClose}>
               <CloseIcon />
@@ -72,11 +94,10 @@ const TaskModal = ({
                 alignItems: "center", // Align items vertically
                 marginRight: 1, // Add right margin
                 mb: 1,
-                  
               }}
             >
-            <Typography variant="subtitle1" component="strong" sx={{ mr: 1 }}>
-              <strong>Skills Needed: </strong>{" "}
+              <Typography variant="subtitle1" component="strong" sx={{ mr: 1 }}>
+                <strong>Skills Needed: </strong>{" "}
               </Typography>
               {/* Add right margin */}
               {renderSkillsAsChips(task.skillsNeeded)}
@@ -124,26 +145,21 @@ const TaskModal = ({
             </strong>
           </Typography>
           <Typography variant="subtitle1" component="div" sx={{ mb: 1 }}>
-          <strong>Assignee:</strong> {task.assignee && task.assignee.username ? task.assignee.username : "Unassigned"}
-
-
-
-</Typography>
+            <strong>Assignee:</strong>{" "}
+            {task.assignee && task.assignee.username
+              ? task.assignee.username
+              : "Unassigned"}
+          </Typography>
           <Typography variant="subtitle1" component="div" sx={{ mb: 1 }}>
             <strong>Due Date:</strong> {formatDate(task.dueDate)}
           </Typography>
           <Typography variant="subtitle1" component="div" sx={{ mb: 1 }}>
             <strong>Rate:</strong> {task.rate || "N/A"}
           </Typography>
-            {conditionalRender(task,
-              <TaskComment
-            commentsData={commentsData}
-            onSubmitComment={addComment}
-            onDeleteComment={deleteComment}
-            taskId={task._id}
-          /> )}    
-          
+  
+         {conditionalRender(task, renderCommentsSection())}
         </CardContent>
+        
       </StyledCard>
     </StyledModal>
   );

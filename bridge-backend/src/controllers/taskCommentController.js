@@ -7,6 +7,10 @@ const TaskComment = require('../models/taskComment');
 // Create a new comment
 exports.createTaskComment = async (req, res) => {
     try {
+        if (!req.body.content) {
+            return res.status(400).json({ error: 'Comment content is required.' });
+          }
+          
       const comment = new TaskComment({
         content: req.body.content,
         author: req.user._id,
@@ -27,6 +31,10 @@ exports.createTaskCommentReply = async (req, res) => {
         if (!parentComment) {
             return res.status(404).json({ error: 'Parent comment not found' });
         }
+        if (!req.body.content) {
+            return res.status(400).json({ error: 'Comment content is required.' });
+          }
+          
 
         const comment = new TaskComment({
             content: req.body.content,
@@ -51,13 +59,16 @@ exports.getTaskComment = async (req, res) => {
     try {
         const comment = await TaskComment.findById(req.params.commentId);
         if (!comment) {
-            return res.status(404).json({ error: 'Comment not found' });
-        }
+            return res.status(404).json({ error: 'Comment not found. Please check the comment ID.' });
+          }
+          
         res.json(comment);
     }
     catch (error) {
-        res.status(500).json({ error: error.message });
-    }
+        console.error(error); // Log the actual error for internal tracking
+        res.status(500).json({ error: 'An unexpected error occurred. Please try again later.' });
+      }
+      
 };
 
 
@@ -69,8 +80,10 @@ exports.getTaskComments = async (req, res) => {
     const comments = await TaskComment.find({ task: req.params.taskId }).populate('author', 'username');
     res.json(comments);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error(error); // Log the actual error for internal tracking
+    res.status(500).json({ error: 'An unexpected error occurred. Please try again later.' });
   }
+  
 };
 
 // Get a specific comment
@@ -79,8 +92,10 @@ exports.getTaskCommentCount = async (req, res) => {
         const count = await TaskComment.countDocuments({ task: req.params.taskId });
         res.json(count);
     } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
+        console.error(error); // Log the actual error for internal tracking
+        res.status(500).json({ error: 'An unexpected error occurred. Please try again later.' });
+      }
+      
 
     };
 
@@ -113,8 +128,10 @@ exports.deleteTaskComment = async (req, res) => {
     }
     res.json({ message: 'Comment deleted successfully' });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error(error); // Log the actual error for internal tracking
+    res.status(500).json({ error: 'An unexpected error occurred. Please try again later.' });
   }
+  
 };
 
 

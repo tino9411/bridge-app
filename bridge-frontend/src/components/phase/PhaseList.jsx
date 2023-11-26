@@ -82,7 +82,13 @@ const PhaseList = ({ projectId }) => {
           </IconButton>}
       titleTypographyProps={{ variant: "h6", align: "center" }}/>
       <CardContent>
-        <List>
+        <List sx={{
+          width: '100%',
+          bgcolor: 'background.paper',
+          overflow: 'auto',
+          maxHeight: 300,
+      
+        }}>
           {phases.map((phase) => (
             <React.Fragment key={phase._id}>
               <ListItem

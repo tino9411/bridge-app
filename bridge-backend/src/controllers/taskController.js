@@ -109,7 +109,6 @@ exports.updateTask = async (req, res) => {
 };
 
 // Complete a task within a project
-
 exports.completeTask = async (req, res) => {
   const { taskId } = req.params;
 
@@ -151,26 +150,36 @@ exports.deleteTask = async (req, res) => {
   try {
     const { taskId, projectId } = req.params;
 
-    // Find the task and delete it if it belongs to the project
-    const task = await Task.findOneAndDelete({
-      _id: taskId,
-      project: projectId,
-    });
+    // Find the task
+    const task = await Task.findById(taskId);
     if (!task) {
       return res.status(404).json({ error: "Task not found" });
     }
 
-    // Remove the task from the project's task list
-    await Project.findByIdAndUpdate(
-      projectId,
-      { $pull: { tasks: taskId } },
-      { new: true }
-    );
-    res
-      .status(200)
-      .json({ message: "Task deleted successfully", task: task._id });
+    // Check if the task is assigned to a user
+    if (task.assignee) {
+      return res
+        .status(409)
+        .json({ message: "Task is currently assigned and cannot be deleted" });
+    }
+
+    // Remove task from the phase if it's assigned
+    if (task.phase) {
+      await Project.updateOne(
+        { _id: projectId, "phases._id": task.phase },
+        { $pull: { "phases.$.assignedTasks": taskId } }
+      );
+    }
+
+    // Delete the task
+    await Task.findByIdAndDelete(taskId);
+
+    res.status(200).json({ message: "Task deleted successfully" });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("Error deleting task:", error);
+    res
+      .status(500)
+      .json({ message: "An error occurred while deleting the task" });
   }
 };
 
