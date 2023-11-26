@@ -1,3 +1,4 @@
+//CreateTaskModal.jsx
 import React, { useState } from "react";
 import {
   Modal,
@@ -14,28 +15,53 @@ import {
   FormControl,
   Chip,
   Box,
-  Autocomplete
+  Autocomplete,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-import { StyledCard } from '../../utils/cardUtils';
+import { StyledCard } from "../../utils/cardUtils";
 import { StyledModal } from "../../utils/modalUtils";
+import { useEffect } from "react";
+import axios from "axios";
+import skillsData from "../user/skills";
 
-const CreateTaskModal = ({ open, onClose, onSubmit }) => {
+const CreateTaskModal = ({ open, onClose, onSubmit, projectId }) => {
   const [newTask, setNewTask] = useState({
-    title: '',
-    description: '',
-    status: 'open',
-    priority: 'low',
+    title: "",
+    description: "",
+    status: "open",
+    priority: "low",
     skillsNeeded: [],
-    assignee: '',
-    dueDate: '',
+    assignee: "",
+    dueDate: "",
     rate: 0,
-    phase: '',
+    phase: "",
     files: [],
   });
 
-  // Define skills for selection (could be fetched or predefined)
-  const skills = ['JavaScript', 'React', 'Node.js', 'Python'];
+  const [phases, setPhases] = useState([]);
+
+  useEffect(() => {
+    const fetchPhases = async () => {
+      try {
+        const response = await axios.get(
+          `http://localhost:3000/projects/${projectId}/phases`
+        );
+        const filteredPhases = response.data.filter(
+          (phase) =>
+            newTask.dueDate &&
+            new Date(newTask.dueDate) >= new Date(phase.startDate) &&
+            new Date(newTask.dueDate) <= new Date(phase.endDate)
+        );
+        setPhases(filteredPhases);
+      } catch (error) {
+        console.error("Error fetching phases", error);
+      }
+    };
+
+    if (newTask.dueDate) {
+      fetchPhases();
+    }
+  }, [newTask.dueDate, projectId]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -43,7 +69,8 @@ const CreateTaskModal = ({ open, onClose, onSubmit }) => {
   };
 
   const handleSkillChange = (event, newValue) => {
-    setNewTask({ ...newTask, skillsNeeded: newValue });
+    const selectedSkills = newValue.map((item) => item.skill);
+    setNewTask({ ...newTask, skillsNeeded: selectedSkills });
   };
 
   // File input change handler
@@ -52,19 +79,39 @@ const CreateTaskModal = ({ open, onClose, onSubmit }) => {
     setNewTask({ ...newTask, files: e.target.files });
   };
 
+  const allSkills = skillsData.reduce((acc, categoryItem) => {
+    const categorySkills = categoryItem.skills.map((skill) => ({
+      label: `${skill} (${categoryItem.category})`,
+      category: categoryItem.category,
+      skill,
+    }));
+    return [...acc, ...categorySkills];
+  }, []);
 
   return (
-    <StyledModal 
-    open={open} 
-    onClose={onClose}
-    >
-      <Card sx={{ /* styling */ }}>
+    <StyledModal open={open} onClose={onClose}>
+      <StyledCard
+        sx={
+          {
+            /* styling */
+          }
+        }
+      >
         <CardHeader
           title={<Typography variant="h6">Create New Task</Typography>}
-          action={<IconButton onClick={onClose}><CloseIcon /></IconButton>}
+          action={
+            <IconButton onClick={onClose}>
+              <CloseIcon />
+            </IconButton>
+          }
         />
         <CardContent>
-          <form onSubmit={(e) => { e.preventDefault(); onSubmit(newTask); }}>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              onSubmit(newTask);
+            }}
+          >
             <TextField
               label="Title"
               name="title"
@@ -84,9 +131,7 @@ const CreateTaskModal = ({ open, onClose, onSubmit }) => {
               multiline
               rows={4}
             />
-
             {/* Other form fields like status, priority, assignee, etc. */}
-            
             <FormControl fullWidth margin="normal">
               <InputLabel>Priority</InputLabel>
               <Select
@@ -100,10 +145,14 @@ const CreateTaskModal = ({ open, onClose, onSubmit }) => {
                 <MenuItem value="high">High</MenuItem>
               </Select>
             </FormControl>
-
-          <Autocomplete
+            <Autocomplete
               multiple
-              options={skills}
+              id="grouped-skills"
+              options={allSkills.sort(
+                (a, b) => -b.category.localeCompare(a.category)
+              )}
+              groupBy={(option) => option.category}
+              getOptionLabel={(option) => option.skill}
               onChange={handleSkillChange}
               renderInput={(params) => (
                 <TextField
@@ -116,7 +165,6 @@ const CreateTaskModal = ({ open, onClose, onSubmit }) => {
               sx={{ my: 2 }}
             />
 
-            {/* Date, Phase, Rate, and File upload fields */}
             <TextField
               label="Due Date"
               name="dueDate"
@@ -127,15 +175,20 @@ const CreateTaskModal = ({ open, onClose, onSubmit }) => {
               onChange={handleInputChange}
               InputLabelProps={{ shrink: true }}
             />
-
-            <TextField
-              label="Phase"
-              name="phase"
-              fullWidth
-              margin="normal"
-              value={newTask.phase}
-              onChange={handleInputChange}
-            />
+           <Autocomplete
+  options={phases}
+  getOptionLabel={(option) => option.name}
+  onChange={(event, newValue) => {
+    setNewTask({
+      ...newTask,
+      phase: newValue?._id || null,
+    });
+  }}
+  renderInput={(params) => (
+    <TextField {...params} label="Select Phase (Optional)" placeholder="Choose a phase" />
+  )}
+  sx={{ my: 2 }}
+/>
 
             <TextField
               label="Rate"
@@ -146,10 +199,9 @@ const CreateTaskModal = ({ open, onClose, onSubmit }) => {
               value={newTask.rate}
               onChange={handleInputChange}
             />
-
             <input
               accept="*/*"
-              style={{ display: 'none' }}
+              style={{ display: "none" }}
               id="raised-button-file"
               multiple
               type="file"
@@ -160,18 +212,15 @@ const CreateTaskModal = ({ open, onClose, onSubmit }) => {
                 Upload File(s)
               </Button>
             </label>
-
             {/* Other fields like dueDate, rate, etc. */}
-
-           <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
-  
+            <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}>
               <Button variant="contained" type="submit">
                 Create
               </Button>
             </Box>
           </form>
         </CardContent>
-      </Card>
+      </StyledCard>
     </StyledModal>
   );
 };

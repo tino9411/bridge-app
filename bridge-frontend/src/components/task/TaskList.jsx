@@ -1,3 +1,4 @@
+//TaskList.jsx
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useParams } from "react-router-dom";
@@ -72,18 +73,38 @@ const handleTaskClick = (task) => {
 const handleCloseModal = () => {
   setSelectedTask(null); // Reset the selected task when the modal is closed
 };
+
 // Function to handle the submission of a new task
 const handleCreateTask = async (newTaskData) => {
   try {
-    await axios.post(`http://localhost:3000/projects/${projectId}/tasks`, newTaskData, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    // Adjust the formatting of the newTaskData
+    const taskSubmission = {
+      ...newTaskData,
+      phase: newTaskData.phase || null, // Directly assign the phase ID
+      skillsNeeded: newTaskData.skillsNeeded, // Directly use the skillsNeeded array
+      rate: parseFloat(newTaskData.rate) || 0,
+    };
+
+    // Log formatted data to check
+    console.log("Task Submission Data:", taskSubmission);
+
+    const response = await axios.post(
+      `http://localhost:3000/projects/${projectId}/tasks`,
+      taskSubmission,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+
+    if(response.data) {
+      setTasks([...tasks, response.data]);
+    }
+
     setShowCreateModal(false); // Close the modal
-    // Refresh the task list
   } catch (err) {
     setError(err.response?.data?.error || "Error creating task");
+    console.error("Task creation error:", err.response || err);
   }
 };
+
 
 const addComment = async (commentData) => {
   try {
@@ -126,6 +147,7 @@ const handleDeleteComment = (commentId) => {
 };
 
 
+
   useEffect(() => {
     const fetchTasks = async () => {
       try {
@@ -145,12 +167,13 @@ const handleDeleteComment = (commentId) => {
 
   return (
     <Card sx={{
-      maxHeight: "600px",
+      maxHeight: "450px",
       maxWidth: "400px",
       display: "flex",
       flexDirection: "column",
       boxShadow: 3,
       borderRadius: 5,
+      mb: 2
     }}>
       <CardHeader title="Task List" 
        action={
@@ -203,7 +226,7 @@ const handleDeleteComment = (commentId) => {
           </Select>
         </FormControl>
       </Box>
-      <List dense sx={{ overflowY: "auto", padding: 0, margin: 0 }}>
+      <List dense sx={{ overflowY: "auto", padding: 0, margin: 0, maxHeight: '400px'  }}>
         {Object.entries(sortedAndFilteredTasks).map(([projectName, tasks]) => (
           <li key={projectName} style={{ backgroundColor: "inherit" }}>
             {" "}
@@ -308,7 +331,8 @@ const handleDeleteComment = (commentId) => {
       <CreateTaskModal 
         open={showCreateModal} 
         onClose={() => setShowCreateModal(false)} 
-        onSubmit={handleCreateTask} 
+        onSubmit={handleCreateTask}
+        projectId={projectId} 
       />
     </Card>
   );

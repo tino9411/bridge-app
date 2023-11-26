@@ -161,7 +161,7 @@ const TaskAssignModal = ({
           sx={{ mr: 1 }}
         />
         <Chip
-          label={`Total Rate: $${totalRate.toFixed(2)}`}
+          label={`Total Cost: $${totalRate.toFixed(2)}`}
           size="small"
           sx={{ mr: 1 }}
         />
@@ -189,11 +189,9 @@ const TaskAssignModal = ({
                   justifyContent: "space-between",
                   width: "300%",
                   maxWidth: 400,
-                  overflowY: "auto",
-
                 }}
               >
-                <Box sx={{ display: "flex", flexDirection: "column", alignItems: "flex-start", }}>
+                <Box sx={{ display: "flex", flexDirection: "column", alignItems: "flex-start",  overflowY: "auto"}}>
                   <ListItemText primary={task.title}   
                                 secondary={
                           <>
@@ -266,6 +264,11 @@ const TaskAssignModal = ({
         <CardHeader
           title={phase?.name}
           titleTypographyProps={{ variant: "h5", align: "center" }}
+          action={
+              <IconButton onClick={onClose}>
+                <CloseIcon />
+              </IconButton>
+            }
         />
         <CardContent>
           {isLoading ? (
@@ -274,7 +277,11 @@ const TaskAssignModal = ({
             <Box>
               {renderPhaseDetails()}
               {tasks.length > 0 ? (
-                <List>{tasks.map(renderTaskItem)}</List>
+                <List
+                sx={{
+                    overflowY: "auto", 
+                }}
+                >{tasks.map(renderTaskItem)}</List>
               ) : (
                 <Typography sx={{ textAlign: "center", my: 2 }}>
                   No tasks available for assignment in this phase's date range.
