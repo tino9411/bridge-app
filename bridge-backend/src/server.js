@@ -6,6 +6,8 @@ const corsOptions = require('./config/corsOptions'); // Adjust the path if neces
 const userRoutes = require('./routes/userRoutes');
 const projectRoutes = require('./routes/projectRoutes');
 const taskRoutes = require('./routes/taskRoutes');
+const phaseRoutes = require('./routes/phaseRoutes');
+const milestoneRoutes = require('./routes/milestoneRoutes');
 const taskCommentRoutes = require('./routes/taskCommentRoutes');
 
 const path = require('path');
@@ -35,6 +37,8 @@ app.use('/users', userRoutes);
 app.use('/projects', projectRoutes);
 app.use('/projects', taskRoutes);
 app.use('/tasks', taskCommentRoutes);
+app.use('/projects', phaseRoutes);
+app.use('/projects', milestoneRoutes);
 
 // Handling 404
 app.use((req, res, next) => {

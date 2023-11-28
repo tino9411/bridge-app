@@ -8,19 +8,11 @@ const {
     deleteProject,
     updateProjectDetails,
     getProjectTasksWithAssignees,
-    addPhaseToProject,
-    getPhase,
-    getPhases,
-    updatePhase,
-    deletePhase,
-    addMilestoneToProject,
-    updateMilestone,
-    deleteMilestone,
     getProjectsWithTaskCount,
     getProjectTeamMembers,
-    assignTaskToPhase,
-    removeTaskFromPhase
   } = require('../controllers/projectController');
+
+
 const authMiddleware = require('../middlewares/auth');
 const checkProjectManagerRole = require('../middlewares/checkProjectManagerRole'); // Ensure you have this middleware to check for the project manager role
 
@@ -47,25 +39,8 @@ router.get('/:projectId/tasks-with-assignees', authMiddleware, getProjectTasksWi
 // Route to get all projects with task count
 router.get('/projects-with-task-count', authMiddleware, getProjectsWithTaskCount);
 
-// Routes for managing phases
-router.get('/:projectId/phases', authMiddleware,getPhases);
-router.post('/:projectId/phases', authMiddleware, checkProjectManagerRole, addPhaseToProject);
-router.get('/:projectId/phases/:phaseId', authMiddleware, getPhase);
-router.put('/:projectId/phases/:phaseId', authMiddleware, checkProjectManagerRole, updatePhase);
-router.delete('/:projectId/phases/:phaseId', authMiddleware, checkProjectManagerRole, deletePhase);
-
-// Route to assign a task to a phase
-router.post('/:projectId/phases/:phaseId/tasks/:taskId', authMiddleware, checkProjectManagerRole, assignTaskToPhase);
-
-// Route to remove a task from a phase
-router.delete('/:projectId/phases/:phaseId/tasks/:taskId', authMiddleware, checkProjectManagerRole, removeTaskFromPhase);
 // Route for updating project details like start date, end date, and budget details
 router.patch('/:projectId/details', authMiddleware, checkProjectManagerRole, updateProjectDetails);
-
-// Routes for managing milestones
-router.post('/:projectId/phases/:phaseId/milestones', authMiddleware,checkProjectManagerRole, addMilestoneToProject);
-router.put('/:projectId/phases/:phaseId/milestones/:milestoneId', authMiddleware, checkProjectManagerRole, updateMilestone);
-router.delete('/:projectId/phases/:phaseId/milestones/:milestoneId', authMiddleware, checkProjectManagerRole, deleteMilestone);
 
 //Route to get team members of a project
 router.get('/:projectId/team', authMiddleware, checkProjectManagerRole, getProjectTeamMembers);

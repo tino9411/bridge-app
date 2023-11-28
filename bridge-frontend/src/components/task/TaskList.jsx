@@ -18,7 +18,6 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
-  Alert,
   Dialog,
   DialogActions,
   DialogContent,
@@ -36,7 +35,8 @@ import useFetchData from "../../hooks/useFetchData";
 import useComments from "../../hooks/useComments";
 import CreateTaskModal from "./CreateTaskModal"; // Import the modal componen
 import DeleteIcon from "@mui/icons-material/Delete";
-import MuiAlert from "@mui/material/Alert";
+import Alert from '@mui/material/Alert';
+import useSnackbar from "../../hooks/useSnackbar"; // Import the useSnackbar hook
 
 const TaskList = () => {
   const [tasks, setTasks] = useState([]);
@@ -50,20 +50,17 @@ const TaskList = () => {
     token
   );
 
-  const [comments, setComments, isLoadingComments] = useComments(selectedTask ? selectedTask._id : null, token);
-  
-  
+  const [comments, setComments, isLoadingComments] = useComments(
+    selectedTask ? selectedTask._id : null,
+    token
+  );
+
   const { projectId } = useParams();
   const theme = useTheme();
   const [showCreateModal, setShowCreateModal] = useState(false); // State to control the modal visibility
   const [openDialog, setOpenDialog] = useState(false); // State to control the dialog visibility
   const [selectedTaskId, setSelectedTaskId] = useState(null);
-  const [successMessage, setSuccessMessage] = useState("");
-  const [showSnackbar, setShowSnackbar] = useState(false);
-  const Alert = React.forwardRef(function Alert(props, ref) {
-    return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
-  });
-  const [alertType, setAlertType] = useState("success"); // Can be 'error', 'warning', 'info', 'success'
+  const { snackbarOpen, snackbarMessage, snackbarSeverity, showSnackbar, handleSnackbarClose } = useSnackbar();
 
   // Handler for changing sort field
   const handleSortChange = (event) => {
@@ -76,34 +73,21 @@ const TaskList = () => {
   };
 
   const handleDeleteTask = async (taskId) => {
-    setOpenDialog(false); // Close the confirmation dialog
+    setOpenDialog(false);
     try {
       const response = await axios.delete(
         `http://localhost:3000/projects/${projectId}/tasks/${taskId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-
       if (response.status === 200) {
         setTasks(tasks.filter((task) => task._id !== taskId));
-        setSuccessMessage(response.data.message || "Task successfully deleted");
-        setAlertType("success");
+        showSnackbar("Task successfully deleted", "success");
       } else {
-        // If the status code is not 200, we assume the backend has reasons for not deleting the task
-        setSuccessMessage(
-          response.data.message ||
-            "Task could not be deleted due to constraints"
-        );
-        setAlertType("error");
+        showSnackbar("Task could not be deleted due to constraints", "error");
       }
     } catch (err) {
-      // If the backend sends an error response, we display that message to the user
-      setSuccessMessage(
-        err.response?.data?.message ||
-          "Failed to delete task. Please try again later."
-      );
-      setAlertType("error");
+      showSnackbar("Failed to delete task. Please try again later.", "error");
     }
-    setShowSnackbar(true); // Show the Snackbar after handling the deletion
   };
 
   const handleOpenDialog = (taskId, event) => {
@@ -139,69 +123,57 @@ const TaskList = () => {
     setSelectedTask(null); // Reset the selected task when the modal is closed
   };
 
-  // Function to handle the submission of a new task
-  const handleCreateTask = async (newTaskData) => {
-    try {
-      // Adjust the formatting of the newTaskData
-      const taskSubmission = {
-        ...newTaskData,
-        phase: newTaskData.phase || null, // Directly assign the phase ID
-        skillsNeeded: newTaskData.skillsNeeded, // Directly use the skillsNeeded array
-        rate: parseFloat(newTaskData.rate) || 0,
-      };
 
-      // Log formatted data to check
-      console.log("Task Submission Data:", taskSubmission);
+// Function to handle the submission of a new task
+const handleCreateTask = async (newTaskData) => {
+  try {
+    // Adjust the formatting of the newTaskData
+    const taskSubmission = {
+      ...newTaskData,
+      phase: newTaskData.phase || null,
+      skillsNeeded: newTaskData.skillsNeeded,
+      rate: parseFloat(newTaskData.rate) || 0,
+    };
 
-      const response = await axios.post(
-        `http://localhost:3000/projects/${projectId}/tasks`,
-        taskSubmission,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+    const response = await axios.post(
+      `http://localhost:3000/projects/${projectId}/tasks`,
+      taskSubmission,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
 
-      if (response.data) {
-        setTasks([...tasks, response.data]);
-        setSuccessMessage("Task created successfully");
-        setAlertType("success");
-      } else {
-        setSuccessMessage("Failed to create task");
-        setAlertType("error");
-      }
-      setShowSnackbar(true);
-
-      setShowCreateModal(false); // Close the modal
-    } catch (err) {
-      setError(err.response?.data?.error || "Error creating task");
-      console.error("Task creation error:", err.response || err);
+    if (response.data) {
+      setTasks([...tasks, response.data]);
+      showSnackbar("Task created successfully", "success");
+    } else {
+      showSnackbar("Failed to create task", "error");
     }
-  };
+  } catch (err) {
+    console.error("Task creation error:", err.response || err);
+    showSnackbar(err.response?.data?.error || "Error creating task", "error");
+  } finally {
+    setShowCreateModal(false); // Close the modal
+  }
+};
+
  // Function to add a new comment to state and to the database
-const handleAddComment = async (newCommentText) => {
+ const handleAddComment = async (newCommentText) => {
   try {
     const response = await axios.post(
       `http://localhost:3000/tasks/${selectedTask._id}/comments`,
-      { content: newCommentText }, // Pass only the content to the server
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
+      { content: newCommentText },
+      { headers: { Authorization: `Bearer ${token}` } }
     );
 
-    // Use the comment data returned from the server
     if (response.data) {
       setComments([...comments, response.data]);
-      setSuccessMessage("Comment added successfully");
-      setAlertType("success");
+      showSnackbar("Comment added successfully", "success");
     } else {
-      throw new Error('Failed to add comment');
+      throw new Error("Failed to add comment");
     }
   } catch (err) {
     const errorMsg = err.response?.data?.error || "Error adding comment";
-    setSuccessMessage(errorMsg);
-    setAlertType("error");
+    showSnackbar(errorMsg, "error");
   }
-  setShowSnackbar(true);
 };
 
   // Function to delete a comment
@@ -209,25 +181,22 @@ const handleAddComment = async (newCommentText) => {
     try {
       const response = await axios.delete(
         `http://localhost:3000/tasks/${selectedTask._id}/comments/${commentId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
-  
-      // Update commentsData state by filtering out the deleted comment
-      const updatedComments = comments.filter((comment) => comment._id !== commentId);
-      setComments(updatedComments);
-      setSuccessMessage(response.data.message || "Comment deleted successfully");
-      setAlertType("success");
+
+      if (response.data) {
+        const updatedComments = comments.filter((comment) => comment._id !== commentId);
+        setComments(updatedComments);
+        showSnackbar(response.data.message || "Comment deleted successfully", "success");
+      } else {
+        throw new Error("Failed to delete comment");
+      }
     } catch (err) {
-      setSuccessMessage(err.response?.data?.error || "Error deleting comment");
-      setAlertType("error");
+      const errorMsg = err.response?.data?.error || "Error deleting comment";
+      showSnackbar(errorMsg, "error");
     }
-    setShowSnackbar(true);
   };
-  
+
   useEffect(() => {
     const fetchTasks = async () => {
       try {
@@ -239,10 +208,7 @@ const handleAddComment = async (newCommentText) => {
         const errorMsg = err.response
           ? err.response.data.error
           : "Error fetching tasks";
-        setError(errorMsg);
-        setSuccessMessage(errorMsg);
-        setAlertType("error");
-        setShowSnackbar(true);
+          showSnackbar(error, "error");
       }
     };
 
@@ -251,19 +217,15 @@ const handleAddComment = async (newCommentText) => {
 
   useEffect(() => {
     if (error) {
-      setSuccessMessage(error);
-      setAlertType("error");
-      setShowSnackbar(true);
+      showSnackbar(error, "error");
     }
-  }, [error]);
+  }, [error, showSnackbar]);
 
   useEffect(() => {
     if (userError) {
-      setSuccessMessage(userError);
-      setAlertType("error");
-      setShowSnackbar(true);
+      showSnackbar(userError, "error");
     }
-  }, [userError]);
+  }, [userError, showSnackbar]);
 
   if (error) {
     return (
@@ -466,20 +428,9 @@ const handleAddComment = async (newCommentText) => {
         </DialogActions>
       </Dialog>
 
-      <Snackbar
-        open={showSnackbar}
-        autoHideDuration={6000}
-        onClose={() => {
-          setShowSnackbar(false);
-          setSuccessMessage(""); // Clear the message if needed
-        }}
-      >
-        <Alert
-          onClose={() => setShowSnackbar(false)}
-          severity={alertType}
-          sx={{ width: "100%" }}
-        >
-          {successMessage}
+      <Snackbar open={snackbarOpen} autoHideDuration={6000} onClose={handleSnackbarClose}>
+        <Alert onClose={handleSnackbarClose} severity={snackbarSeverity} sx={{ width: '100%' }}>
+          {snackbarMessage}
         </Alert>
       </Snackbar>
       {console.log("In TaskList, addComment is:", handleAddComment)}

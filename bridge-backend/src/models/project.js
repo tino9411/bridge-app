@@ -26,53 +26,6 @@
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
-const milestoneSchema = new Schema({
-  title: {
-    type: String,
-    required: true,
-    trim: true
-  },
-  dueDate: {
-    type: Date,
-    required: true
-  },
-  progress: {
-    type: Number,
-    default: 0
-  },
-  completed: {
-    type: Boolean,
-    default: false
-  }
-}); // Prevents creation of separate _id for milestones
-
-const phaseSchema = new Schema({
-  name: {
-    type: String,
-    required: true,
-    trim: true
-  },
-  startDate: {
-    type: Date,
-    required: true
-  },
-  endDate: {
-    type: Date,
-    required: true
-  },
-  status: {
-    type: String,
-    enum: ['Not Started', 'In Progress', 'Completed'],
-    default: 'Not Started'
-  },
-  assignedTasks: [{
-    type: Schema.Types.ObjectId,
-    ref: 'Task'
-  }],
-  milestones: [milestoneSchema] // Embeds the milestones within phases
-
-}); // Prevents creation of separate _id for phases
-
 const projectSchema = new Schema({
   name: {
     type: String,
@@ -115,7 +68,10 @@ const projectSchema = new Schema({
     type: Schema.Types.ObjectId,
     ref: 'Task'
   }],
-  phases: [phaseSchema], // Uses the phaseSchema defined above
+  phases: [{ // Adjusted to reference the Phase model
+    type: Schema.Types.ObjectId,
+    ref: 'Phase'
+  }],
   team: [{
     type: Schema.Types.ObjectId,
     ref: 'User'

@@ -1,3 +1,4 @@
+// EditPhaseModal.jsx
 import React, { useState, useEffect, useContext } from "react";
 import {
   Card,
@@ -15,18 +16,17 @@ import { StyledModal } from "../../utils/modalUtils";
 import axios from "axios";
 import PhaseContext from "./PhaseContext";
 
-const CreatePhaseModal = ({ open, onClose }) => {
-  const { projectId, newPhase, setNewPhase, handleCreatePhaseSubmit} =
-    useContext(PhaseContext);
-
+const EditPhaseModal = ({ open, onClose, phaseToEdit }) => {
+  const { projectId, handleUpdatePhaseSubmit } = useContext(PhaseContext);
+  const [phase, setPhase] = useState(phaseToEdit || {});
   const [availableTasks, setAvailableTasks] = useState([]);
-  const [selectedTaskCount, setSelectedTaskCount] = useState(0);
 
   useEffect(() => {
-    if (newPhase.startDate && newPhase.endDate) {
+    setPhase(phaseToEdit || {});
+    if (phaseToEdit?.startDate && phaseToEdit?.endDate) {
       fetchTasksForPhase();
     }
-  }, [newPhase.startDate, newPhase.endDate, projectId]);
+  }, [phaseToEdit, projectId]);
 
   const fetchTasksForPhase = async () => {
     try {
@@ -34,18 +34,12 @@ const CreatePhaseModal = ({ open, onClose }) => {
         `http://localhost:3000/projects/${projectId}/tasks`,
         {
           params: {
-            startDate: newPhase.startDate,
-            endDate: newPhase.endDate,
+            startDate: phase.startDate,
+            endDate: phase.endDate,
           },
         }
       );
-      setAvailableTasks(
-        response.data.filter(
-          (task) =>
-            new Date(task.dueDate) >= new Date(newPhase.startDate) &&
-            new Date(task.dueDate) <= new Date(newPhase.endDate)
-        )
-      );
+      setAvailableTasks(response.data);
     } catch (err) {
       console.error("Error fetching tasks for phase", err);
     }
@@ -53,22 +47,26 @@ const CreatePhaseModal = ({ open, onClose }) => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setNewPhase({ ...newPhase, [name]: value });
+    setPhase({ ...phase, [name]: value });
   };
 
   const handleTaskSelection = (event, newValue) => {
-    setNewPhase({
-      ...newPhase,
+    setPhase({
+      ...phase,
       assignedTasks: newValue.map((task) => task._id),
     });
-    setSelectedTaskCount(newValue.length); // Update the selected task count
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    handleUpdatePhaseSubmit(phase);
   };
 
   return (
     <StyledModal open={open} onClose={onClose}>
       <Card>
         <CardHeader
-          title={<Typography variant="h6">Create New Phase</Typography>}
+          title={<Typography variant="h6">Edit Phase</Typography>}
           action={
             <IconButton onClick={onClose}>
               <CloseIcon />
@@ -76,18 +74,13 @@ const CreatePhaseModal = ({ open, onClose }) => {
           }
         />
         <CardContent>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleCreatePhaseSubmit(newPhase);
-            }}
-          >
+          <form onSubmit={handleSubmit}>
             <TextField
               label="Phase Name"
               name="name"
               fullWidth
               margin="normal"
-              value={newPhase.name}
+              value={phase.name}
               onChange={handleInputChange}
               required
             />
@@ -98,7 +91,7 @@ const CreatePhaseModal = ({ open, onClose }) => {
               type="date"
               fullWidth
               margin="normal"
-              value={newPhase.startDate}
+              value={phase.startDate}
               onChange={handleInputChange}
               InputLabelProps={{ shrink: true }}
             />
@@ -109,7 +102,7 @@ const CreatePhaseModal = ({ open, onClose }) => {
               type="date"
               fullWidth
               margin="normal"
-              value={newPhase.endDate}
+              value={phase.endDate}
               onChange={handleInputChange}
               InputLabelProps={{ shrink: true }}
             />
@@ -118,6 +111,8 @@ const CreatePhaseModal = ({ open, onClose }) => {
               multiple
               options={availableTasks}
               getOptionLabel={(option) => option.title}
+              value={availableTasks.filter(task =>
+                phase.assignedTasks?.includes(task._id))}
               onChange={handleTaskSelection}
               renderInput={(params) => (
                 <TextField
@@ -129,13 +124,10 @@ const CreatePhaseModal = ({ open, onClose }) => {
               )}
               sx={{ my: 2 }}
             />
-            <Typography variant="body2" sx={{ mt: 1 }}>
-              {selectedTaskCount} task{selectedTaskCount !== 1 ? "s" : ""}{" "}
-              selected
-            </Typography>
+
             <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}>
               <Button variant="contained" type="submit">
-                Create Phase
+                Update Phase
               </Button>
             </Box>
           </form>
@@ -145,4 +137,4 @@ const CreatePhaseModal = ({ open, onClose }) => {
   );
 };
 
-export default CreatePhaseModal;
+export default EditPhaseModal;

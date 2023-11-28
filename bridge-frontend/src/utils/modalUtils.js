@@ -1,3 +1,7 @@
+//modalUtils.js
+// Type: Component Utility
+// Description: Custom Modal component
+//
 import { Modal } from "@mui/material";
 import React from "react";
 

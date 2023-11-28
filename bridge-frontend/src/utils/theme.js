@@ -1,3 +1,5 @@
+//theme.js
+// Desc: This file contains the theme for the application
 import { createTheme } from '@mui/material/styles';
 import { blue, orange, green, red, grey } from "@mui/material/colors";
 

@@ -3,6 +3,8 @@ const mongoose = require("mongoose"); // Import mongoose
 const Project = require("../models/project");
 const Task = require("../models/task");
 const User = require("../models/user");
+const Phase = require("../models/phase");
+
 
 // Add a new task to a project
 exports.addTask = async (req, res) => {
@@ -42,19 +44,7 @@ exports.addTask = async (req, res) => {
     }
 
     const task = new Task(taskData);
-    await task.save();
-
-    // If a phase is provided, add the task to the phase's assignedTasks
-    if (phase) {
-      await Project.findByIdAndUpdate(
-        projectId,
-        { $push: { "phases.$[ph].assignedTasks": task._id } },
-        {
-          arrayFilters: [{ "ph._id": new mongoose.Types.ObjectId(phase) }],
-          new: true,
-        }
-      );
-    }
+    await task.save();   
 
     // Add the task to the project's task list
     await Project.findByIdAndUpdate(projectId, { $push: { tasks: task._id } });
@@ -67,23 +57,23 @@ exports.addTask = async (req, res) => {
 
 // Get all tasks for a project
 exports.getTasks = async (req, res) => {
-  try {
-    const { projectId } = req.params;
-    // Update this line to populate 'project' and 'assignee' fields
-    const task = await Task.find({ project: projectId })
-      .populate("project", "name")
-      .populate("assignee", [
-        "username",
-        "firstName",
-        "lastName",
-        "email",
-        "phoneNumber",
-      ]);
-    res.status(200).json(task);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
+    try {
+      const { projectId } = req.params;
+      const tasks = await Task.find({ project: projectId })
+        .populate("project", "name")
+        .populate("assignee", [
+          "username",
+          "firstName",
+          "lastName",
+          "email",
+          "phoneNumber",
+        ])
+        .populate("phase"); // Corrected population of phase
+      res.status(200).json(tasks);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  };
 
 // Update a task within a project
 exports.updateTask = async (req, res) => {
@@ -170,6 +160,10 @@ exports.deleteTask = async (req, res) => {
         { $pull: { "phases.$.assignedTasks": taskId } }
       );
     }
+
+    //Remove task from the project
+    await Project.deleteOne({ _id: projectId, tasks: taskId });
+
 
     // Delete the task
     await Task.findByIdAndDelete(taskId);

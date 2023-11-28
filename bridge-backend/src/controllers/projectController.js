@@ -1,6 +1,8 @@
 //projectController.js
 const Project = require('../models/project');
 const Task = require('../models/task'); // Assuming you have a Task model
+const Phase = require('../models/phase'); // Assuming you have a Phase model
+
 
 // Create a new project
 exports.createProject = async (req, res) => {
@@ -107,18 +109,18 @@ exports.updateProjectDetails = async (req, res) => {
 
 // Delete a specific project
 exports.deleteProject = async (req, res) => {
-    try {
-        const project = await Project.findOneAndDelete({ _id: req.params.id, projectManager: req.user._id });
-        if (!project) {
-            return res.status(404).json({ error: 'Project not found' });
-        }
-        // Optionally, delete all tasks associated with the project
-        await Task.deleteMany({ project: req.params.id });
-
-        res.status(200).json({ message: 'Project deleted', project: project._id });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
+  try {
+    const project = await Project.findOneAndDelete({ _id: req.params.id, projectManager: req.user._id });
+    if (!project) {
+      return res.status(404).json({ error: 'Project not found' });
     }
+    await Task.deleteMany({ project: req.params.id });
+    // Optionally, handle deletion of associated Phases here or in a separate function
+    await Phase.deleteMany({ project: req.params.id });
+    res.status(200).json({ message: 'Project deleted', project: project._id });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 };
 
 // Get all tasks with assignee details for a project
@@ -143,93 +145,6 @@ exports.getProjectTasksWithAssignees = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
-
-exports.addPhaseToProject = async (req, res) => {
-  const { projectId } = req.params;
-  const phaseData = req.body; // Phase data from the request body
-
-  try {
-    const project = await Project.findById(projectId);
-
-    if (!project) {
-      return res.status(404).json({ error: 'Project not found' });
-    }
-
-    // Add the new phase
-    project.phases.push(phaseData);
-    await project.save();
-
-    // Retrieve the newly added phase (the last element in the phases array)
-    const newPhase = project.phases[project.phases.length - 1];
-
-    res.status(201).json(newPhase); // Return only the new phase
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
-};
-
-  
-  // Function to get a specific phase of a project
-  exports.getPhase = async (req, res) => {
-    const { projectId, phaseId } = req.params;
-  
-    try {
-      const project = await Project.findById(projectId);
-      const phase = project.phases.id(phaseId); // Using Mongoose's id method to find a subdocument
-  
-      if (!phase) {
-        return res.status(404).json({ error: 'Phase not found' });
-      }
-  
-      res.status(200).json(phase);
-    } catch (error) {
-      res.status(400).json({ error: error.message });
-    }
-  };
-  
-  exports.getPhases = async (req, res) => {
-    try {
-      const project = await Project.findById(req.params.projectId).populate('phases');
-      if (!project) {
-        return res.status(404).json({ error: 'Project not found' });
-      }
-      res.status(200).json(project.phases);
-    } catch (error) {
-      res.status(500).json({ error: error.message });
-    }
-  };
-  
- // Function to update a specific phase of a project
-exports.updatePhase = async (req, res) => {
-  const { projectId, phaseId } = req.params;
-  const phaseUpdate = req.body;
-
-  try {
-    // Building an update object dynamically
-    let updateObject = {};
-    for (const [key, value] of Object.entries(phaseUpdate)) {
-      updateObject[`phases.$.${key}`] = value;
-    }
-
-    const project = await Project.findOneAndUpdate(
-      { "_id": projectId, "phases._id": phaseId },
-      { $set: updateObject },
-      { new: true, runValidators: true }
-    );
-
-    if (!project) {
-      return res.status(404).json({ error: 'Project or phase not found' });
-    }
-
-    // Find the updated phase to return
-    const updatedPhase = project.phases.id(phaseId);
-    res.status(200).json(updatedPhase);
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
-};
-
-  
   // Function to delete a specific phase of a project
   exports.deletePhase = async (req, res) => {
     const { projectId, phaseId } = req.params;
@@ -250,194 +165,6 @@ exports.updatePhase = async (req, res) => {
       res.status(400).json({ error: error.message });
     }
   };
-
-  // In your projectController.js
-
-// Function to assign a task to a phase
-exports.assignTaskToPhase = async (req, res) => {
-  const { projectId, phaseId, taskId } = req.params;
-
-  try {
-    // Fetch the project and the specific phase
-    const project = await Project.findById(projectId);
-    if (!project) {
-      return res.status(404).json({ error: 'Project not found' });
-    }
-
-    const phase = project.phases.id(phaseId);
-    if (!phase) {
-      return res.status(404).json({ error: 'Phase not found' });
-    }
-
-    // Check if the task exists and is not already assigned to another phase
-    const task = await Task.findById(taskId);
-    if (!task || task.phase) {
-      return res.status(400).json({ error: 'Invalid task or task already assigned' });
-    }
-
-    // Assign the task to the phase
-    phase.assignedTasks.push(taskId);
-    task.phase = phaseId;
-
-    // Save both the project and the task
-    await project.save();
-    await task.save();
-
-    res.status(200).json({ message: 'Task assigned to phase successfully', phase });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
-
-exports.removeTaskFromPhase = async (req, res) => {
-  const { projectId, phaseId, taskId } = req.params;
-
-  try {
-    // Fetch the project
-    const project = await Project.findById(projectId);
-    if (!project) {
-      return res.status(404).json({ error: 'Project not found' });
-    }
-
-    // Find the specific phase
-    const phase = project.phases.id(phaseId);
-    if (!phase) {
-      return res.status(404).json({ error: 'Phase not found' });
-    }
-
-    // Check if the task exists and is assigned to the phase
-    const taskIndex = phase.assignedTasks.indexOf(taskId);
-    if (taskIndex === -1) {
-      return res.status(400).json({ error: 'Task not found in the phase' });
-    }
-
-    // Remove the task from the phase
-    phase.assignedTasks.splice(taskIndex, 1);
-
-    // Update the task's phase reference (optional, based on your schema design)
-    const task = await Task.findById(taskId);
-    if (task) {
-      task.phase = null;
-      await task.save();
-    }
-
-    // Save the project
-    await project.save();
-
-    res.status(200).json({ message: 'Task removed from phase successfully', phase });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
-
-
-
-// Add a new milestone to a specific phase of a project
-exports.addMilestoneToProject = async (req, res) => {
-  try {
-      const { projectId, phaseId } = req.params;
-      const { title, dueDate } = req.body;
-
-      // Find the project and the specific phase to add the milestone to
-      const project = await Project.findById(projectId);
-      if (!project) {
-          return res.status(404).json({ error: 'Project not found' });
-      }
-
-      // Find the specific phase in the project
-      const phase = project.phases.id(phaseId);
-      if (!phase) {
-          return res.status(404).json({ error: 'Phase not found' });
-      }
-
-      // Add the new milestone to the phase's milestones array
-      phase.milestones.push({ title, dueDate });
-
-      // Save the updated project
-      await project.save();
-
-      res.status(201).json({ message: 'Milestone added successfully', phase: phase });
-  } catch (error) {
-      res.status(400).json({ error: error.message });
-  }
-};
-
-
-// Update a milestone within a project
-exports.updateMilestone = async (req, res) => {
-  try {
-      const { projectId, phaseId, milestoneId } = req.params;
-      const { title, dueDate, completed } = req.body;
-
-      // Find the project and the specific phase
-      const project = await Project.findById(projectId);
-      if (!project) {
-          return res.status(404).json({ error: 'Project not found' });
-      }
-
-      // Find the specific phase within the project
-      const phase = project.phases.id(phaseId);
-      if (!phase) {
-          return res.status(404).json({ error: 'Phase not found' });
-      }
-
-      // Validate dueDate against phase's start and end dates
-      if (dueDate) {
-          const dueDateObject = new Date(dueDate);
-          if (dueDateObject < phase.startDate || dueDateObject > phase.endDate) {
-              return res.status(400).json({ error: 'Milestone due date must fall within the phase start and end dates' });
-          }
-      }
-
-      // Find the specific milestone within the phase
-      const milestone = phase.milestones.id(milestoneId);
-      if (!milestone) {
-          return res.status(404).json({ error: 'Milestone not found' });
-      }
-
-      // Conditional updates
-      if (title !== undefined) {
-          milestone.title = title;
-      }
-      if (dueDate !== undefined) {
-          milestone.dueDate = dueDate;
-      }
-      if (completed !== undefined) {
-          milestone.completed = completed;
-      }
-
-      // Save the changes to the project
-      await project.save();
-
-      res.status(200).json(milestone);
-  } catch (error) {
-      res.status(400).json({ error: error.message });
-  }
-};
-
-
-
-// Delete a milestone from a project
-exports.deleteMilestone = async (req, res) => {
-    try {
-        const { projectId, phaseId, milestoneId } = req.params;
-
-        // Update the project, pulling the milestone from the phase's milestones array
-        const project = await Project.findOneAndUpdate(
-            { "_id": projectId, "phases._id": phaseId },
-            { $pull: { "phases.$.milestones": { _id: milestoneId } } },
-            { new: true }
-        );
-
-        if (!project) {
-            return res.status(404).json({ error: 'Project not found' });
-        }
-
-        res.status(200).json({ message: 'Milestone deleted successfully' });
-    } catch (error) {
-        res.status(400).json({ error: error.message });
-    }
-};
 
 
 exports.getProjectsWithTaskCount = async (req, res) => {

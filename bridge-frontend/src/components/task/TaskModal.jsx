@@ -1,6 +1,6 @@
 //TaskModal.jsxs
 import React from "react";
-import { Skeleton } from '@mui/material';
+import { Skeleton } from "@mui/material";
 import {
   CardContent,
   CardHeader,
@@ -19,6 +19,7 @@ import { renderSkillsAsChips } from "../../utils/chipUtils";
 import { useTheme } from "@mui/material/styles";
 
 const TaskModal = ({
+    
   task,
   onClose,
   commentsData,
@@ -26,13 +27,28 @@ const TaskModal = ({
   deleteComment,
   isLoadingComments,
 }) => {
-
   const theme = useTheme();
+
+  const renderTaskPhase = () => {
+    if (task.phase) {
+      return (
+        <Typography variant="subtitle1" component="div" sx={{ mb: 1 }}>
+          <strong>Phase:</strong> {task.phase.name}
+        </Typography>
+      );
+    }
+    return null;
+  };
 
   const renderCommentsSection = () => {
     if (isLoadingComments) {
       return [...Array(5)].map((_, index) => (
-        <Skeleton key={index} animation="wave" height={40} style={{ marginBottom: 6 }} />
+        <Skeleton
+          key={index}
+          animation="wave"
+          height={40}
+          style={{ marginBottom: 6 }}
+        />
       ));
     }
 
@@ -150,16 +166,16 @@ const TaskModal = ({
               ? task.assignee.username
               : "Unassigned"}
           </Typography>
+          {renderTaskPhase()}
           <Typography variant="subtitle1" component="div" sx={{ mb: 1 }}>
             <strong>Due Date:</strong> {formatDate(task.dueDate)}
           </Typography>
           <Typography variant="subtitle1" component="div" sx={{ mb: 1 }}>
             <strong>Rate:</strong> {task.rate || "N/A"}
           </Typography>
-  
-         {conditionalRender(task, renderCommentsSection())}
+
+          {conditionalRender(task, renderCommentsSection())}
         </CardContent>
-        
       </StyledCard>
     </StyledModal>
   );

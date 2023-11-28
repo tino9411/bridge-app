@@ -51,11 +51,10 @@ const taskSchema = new Schema({
         enum: ['new','low', 'medium', 'high'],
         default: 'low'
     },
-    phase: {
-      type: Schema.Types.ObjectId,
-      ref: 'Phase', // Reference to a 'Phase' model
-      default: null
-    },
+    phase: { // Adjusted to reference the Phase model
+        type: Schema.Types.ObjectId,
+        ref: 'Phase'
+      },
     skillsNeeded: [{
         type: String,
         trim: true
