@@ -1,4 +1,3 @@
-// EditPhaseModal.jsx
 import React, { useState, useEffect, useContext } from "react";
 import {
   Card,
@@ -9,64 +8,48 @@ import {
   TextField,
   Button,
   Box,
-  Autocomplete,
+  Select,
+  MenuItem,
+  List,
+  ListItem,
+  ListItemText,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import { StyledModal } from "../../utils/modalUtils";
-import axios from "axios";
 import PhaseContext from "./PhaseContext";
 
 const EditPhaseModal = ({ open, onClose, phaseToEdit }) => {
-  const { projectId, handleUpdatePhaseSubmit } = useContext(PhaseContext);
-  const [phase, setPhase] = useState(phaseToEdit || {});
-  const [availableTasks, setAvailableTasks] = useState([]);
+  const { handleUpdatePhaseSubmit } = useContext(PhaseContext);
+  const [phase, setPhase] = useState({ ...phaseToEdit });
 
   useEffect(() => {
-    setPhase(phaseToEdit || {});
-    if (phaseToEdit?.startDate && phaseToEdit?.endDate) {
-      fetchTasksForPhase();
+    if (open) {
+      setPhase({
+        ...phaseToEdit,
+        startDate: phaseToEdit?.startDate?.split("T")[0], // Ensure the date is in 'YYYY-MM-DD' format
+        endDate: phaseToEdit?.endDate?.split("T")[0],
+      });
     }
-  }, [phaseToEdit, projectId]);
-
-  const fetchTasksForPhase = async () => {
-    try {
-      const response = await axios.get(
-        `http://localhost:3000/projects/${projectId}/tasks`,
-        {
-          params: {
-            startDate: phase.startDate,
-            endDate: phase.endDate,
-          },
-        }
-      );
-      setAvailableTasks(response.data);
-    } catch (err) {
-      console.error("Error fetching tasks for phase", err);
-    }
-  };
+  }, [open, phaseToEdit]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setPhase({ ...phase, [name]: value });
   };
 
-  const handleTaskSelection = (event, newValue) => {
-    setPhase({
-      ...phase,
-      assignedTasks: newValue.map((task) => task._id),
-    });
-  };
-
   const handleSubmit = (e) => {
     e.preventDefault();
     handleUpdatePhaseSubmit(phase);
   };
-
   return (
     <StyledModal open={open} onClose={onClose}>
       <Card>
         <CardHeader
-          title={<Typography variant="h6">Edit Phase</Typography>}
+          title={<Typography variant="h6"
+          sx={{
+            borderBottom: "1px solid #ddd",
+          }}
+          >Edit Phase</Typography>}
           action={
             <IconButton onClick={onClose}>
               <CloseIcon />
@@ -107,23 +90,34 @@ const EditPhaseModal = ({ open, onClose, phaseToEdit }) => {
               InputLabelProps={{ shrink: true }}
             />
 
-            <Autocomplete
-              multiple
-              options={availableTasks}
-              getOptionLabel={(option) => option.title}
-              value={availableTasks.filter(task =>
-                phase.assignedTasks?.includes(task._id))}
-              onChange={handleTaskSelection}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  variant="standard"
-                  label="Assign Tasks"
-                  placeholder="Select tasks"
-                />
-              )}
-              sx={{ my: 2 }}
-            />
+            <Select
+              label="Status"
+              name="status"
+              fullWidth
+              margin="normal"
+              value={phase.status}
+              onChange={handleInputChange}
+              required
+            >
+              {/* Update with actual status options */}
+              <MenuItem value="planned">Planned</MenuItem>
+              <MenuItem value="in progress">In Progress</MenuItem>
+              <MenuItem value="completed">Completed</MenuItem>
+            </Select>
+
+            <Typography variant="subtitle1" sx={{ mt: 2 }}>
+              Milestones:
+            </Typography>
+            <List>
+              {phase?.milestones?.map((milestone, index) => (
+                <ListItem key={index}>
+                  <ListItemText
+                    primary={milestone.title}
+                    secondary={`Progress: ${milestone.progress}%`}
+                  />
+                </ListItem>
+              ))}
+            </List>
 
             <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}>
               <Button variant="contained" type="submit">

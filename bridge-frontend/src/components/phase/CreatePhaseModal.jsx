@@ -9,6 +9,8 @@ import {
   Button,
   Box,
   Autocomplete,
+  Select,
+  MenuItem,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import { StyledModal } from "../../utils/modalUtils";
@@ -16,7 +18,7 @@ import axios from "axios";
 import PhaseContext from "./PhaseContext";
 
 const CreatePhaseModal = ({ open, onClose }) => {
-  const { projectId, newPhase, setNewPhase, handleCreatePhaseSubmit} =
+  const { projectId, newPhase, setNewPhase, handleCreatePhaseSubmit } =
     useContext(PhaseContext);
 
   const [availableTasks, setAvailableTasks] = useState([]);
@@ -113,6 +115,21 @@ const CreatePhaseModal = ({ open, onClose }) => {
               onChange={handleInputChange}
               InputLabelProps={{ shrink: true }}
             />
+
+            <Select
+              label="Status"
+              name="status"
+              fullWidth
+              margin="normal"
+              value={newPhase.status}
+              onChange={handleInputChange}
+              required
+            >
+              {/* Update with actual status options */}
+              <MenuItem value="planned">Planned</MenuItem>
+              <MenuItem value="in progress">In Progress</MenuItem>
+              <MenuItem value="completed">Completed</MenuItem>
+            </Select>
 
             <Autocomplete
               multiple

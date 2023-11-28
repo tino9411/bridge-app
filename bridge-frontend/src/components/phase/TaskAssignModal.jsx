@@ -40,22 +40,24 @@ const TaskAssignModal = ({ open, onClose, onTaskAssigned, phaseId }) => {
   const [filter, setFilter] = useState(""); // State for task filter
   const theme = useTheme();
 
+  const fetchPhaseDetails = async () => {
+    try {
+      setIsLoading(true);
+      const response = await axios.get(
+        `http://localhost:3000/projects/${projectId}/phases/${phaseId}`
+      );
+      // Adjust according to the new response structure
+      setPhase(response.data.phase);
+      setIsLoading(false);
+    } catch (error) {
+      console.error("Error fetching phase details", error);
+      setIsLoading(false);
+    }
+  };
+
   // Fetch phase details and tasks
   useEffect(() => {
-    const fetchPhaseDetails = async () => {
-      try {
-        setIsLoading(true);
-        const response = await axios.get(
-          `http://localhost:3000/projects/${projectId}/phases/${phaseId}`
-        );
-        setPhase(response.data.phase);
-        setIsLoading(false);
-      } catch (error) {
-        console.error("Error fetching phase details", error);
-        setIsLoading(false);
-      }
-    };
-
+  
     fetchPhaseDetails();
   }, [phaseId, projectId]);
 
@@ -105,10 +107,12 @@ const TaskAssignModal = ({ open, onClose, onTaskAssigned, phaseId }) => {
           await axios.delete(url);
         }
       }
+      await fetchPhaseDetails();
       onTaskAssigned(); // Trigger update in parent component
       onClose(); // Close modal
       showSnackbar(`Tasks successfully ${action === 'assign' ? 'assigned' : 'unassigned'}`, 'success');
       refreshPhaseList(); // Call this function after task actions
+      setSelectedTasks([]); // Clear selected tasks
     } catch (err) {
       console.error(`Error ${action} tasks:`, err);
       showSnackbar(`Error ${action} tasks`, 'error');
@@ -127,35 +131,53 @@ const TaskAssignModal = ({ open, onClose, onTaskAssigned, phaseId }) => {
   };
 
   const getFilteredTasks = () => {
+    if (!phase) return [];
+  
     return tasks.filter((task) => {
-      const isAssigned = phase.assignedTasks.includes(task._id);
+      const isAssigned = phase.assignedTasks.some(assignedTask => assignedTask._id === task._id);
       if (filter === "assigned") return isAssigned;
       if (filter === "unassigned") return !isAssigned;
       return true; // Default to 'all'
     });
   };
-
-  const filteredTasks = getFilteredTasks(); // Use this variable to render the task list
-
+  
+  const filteredTasks = getFilteredTasks(); // Call this after phase state is updated
+  
   const calculateTotalRate = () => {
-    // Calculate the total rate for selected and already assigned tasks
-    const selectedTaskIds = new Set(selectedTasks);
-    const totalRate = tasks.reduce((total, task) => {
-      if (
-        selectedTaskIds.has(task._id) ||
-        phase.assignedTasks.includes(task._id)
-      ) {
-        return total + task.rate;
-      }
-      return total;
+    // Check if phase exists
+    if (!phase) return 0;
+  
+    // Start with the cost of already assigned tasks
+    let totalRate = phase.assignedTasks.reduce((sum, assignedTask) => {
+      // Find the full task object from tasks array using assignedTask ID
+      const fullTask = tasks.find(task => task._id === assignedTask._id);
+      // Return the sum of the rates, ensuring to convert string to number if necessary
+      return sum + (fullTask ? parseFloat(fullTask.rate) || 0 : 0);
     }, 0);
+  
+    // Iterate over the selected tasks
+    selectedTasks.forEach(taskId => {
+      // Check if the task is not already in the assigned tasks list
+      if (!phase.assignedTasks.some(assignedTask => assignedTask._id === taskId)) {
+        // Find the full task object from tasks array
+        const task = tasks.find(task => task._id === taskId);
+        // If found, add its rate to the total
+        if (task) totalRate += parseFloat(task.rate) || 0;
+      }
+      // If the task is already assigned, don't add its rate again
+    });
+  
     return totalRate;
   };
+  
+
 
   const renderPhaseDetails = () => {
-    const totalRate = calculateTotalRate();
-    const assignedTasksCount =
-      phase?.assignedTasks.length + selectedTasks.length;
+    if (!phase) return null;
+  // If the backend provides summary data, use it here
+  const totalRate = calculateTotalRate();
+  const assignedTasksCount = phase?.assignedTasks.length || 0;
+  const milestoneProgress = phase?.milestoneProgress || 0; // Example if milestone progress is included in the summary
     return (
       <Box sx={{ mb: 2 }}>
         <Box
@@ -196,13 +218,18 @@ const TaskAssignModal = ({ open, onClose, onTaskAssigned, phaseId }) => {
           size="small"
           sx={{ mr: 1 }}
         />
+        <Chip
+        label={`Milestone Progress: ${milestoneProgress}%`}
+        size="small"
+        sx={{ mr: 1 }}
+      />
         <Divider />
       </Box>
     );
   };
 
   const renderTaskItem = (task) => {
-    const isAssigned = phase.assignedTasks.includes(task._id);
+    const isAssigned = phase.assignedTasks.some(assignedTask => assignedTask._id.toString() === task._id);
     const assignedTaskStyle = isAssigned ? { backgroundColor: "#f0f0f0" } : {};
     return (
       <React.Fragment>

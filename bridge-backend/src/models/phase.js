@@ -48,8 +48,8 @@ const phaseSchema = new Schema({
   },
   status: {
     type: String,
-    enum: ['Not Started', 'In Progress', 'Completed'],
-    default: 'Not Started'
+    enum: ['planned', 'in progress', 'completed'],
+    default: 'planned'
   },
   assignedTasks: [{
     type: Schema.Types.ObjectId,
