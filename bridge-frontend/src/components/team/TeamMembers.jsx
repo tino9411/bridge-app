@@ -27,6 +27,7 @@ const TeamMembers = ({ team, projects, onProjectSelect }) => {
       sx={{
         height: "100%",
         maxHeight: "400px",
+        minWidth: "400px",
         display: "flex",
         flexDirection: "column",
         boxShadow: 3,

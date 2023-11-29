@@ -23,8 +23,6 @@ exports.createProject = async (req, res) => {
       }
     }
   };
-  
-
 // Get all projects for the logged-in user with task count
 exports.getAllProjects = async (req, res) => {
   try {
@@ -54,7 +52,6 @@ exports.getAllProjects = async (req, res) => {
       res.status(500).json({ error: error.message });
   }
 };
-
 // Get a specific project by ID
 exports.getProject = async (req, res) => {
     try {
@@ -68,43 +65,26 @@ exports.getProject = async (req, res) => {
     }
 };
 
-// Update a specific project
+// Update a specific project along with all its details
 exports.updateProject = async (req, res) => {
-    try {
-        const project = await Project.findOneAndUpdate(
-            { _id: req.params.id, projectManager: req.user._id }, 
-            req.body, 
-            { new: true, runValidators: true }
-        );
-        if (!project) {
-            return res.status(404).json({ error: 'Project not found' });
-        }
-        res.status(200).json(project);
-    } catch (error) {
-        res.status(400).json({ error: error.message });
-    }
-};
+  try {
+      const updateData = req.body;
 
-// Update project dates and budget details
-exports.updateProjectDetails = async (req, res) => {
-    try {
-        const { projectId } = req.params;
-        const { startDate, endDate, budgetDetails } = req.body;
+      // Find the project and update it
+      const project = await Project.findOneAndUpdate(
+          { _id: req.params.id, projectManager: req.user._id },
+          updateData,
+          { new: true, runValidators: true }
+      );
 
-        const project = await Project.findByIdAndUpdate(
-            projectId,
-            { startDate, endDate, budgetDetails },
-            { new: true, runValidators: true }
-        );
+      if (!project) {
+          return res.status(404).json({ error: 'Project not found' });
+      }
 
-        if (!project) {
-            return res.status(404).json({ error: 'Project not found' });
-        }
-
-        res.status(200).json(project);
-    } catch (error) {
-        res.status(400).json({ error: error.message });
-    }
+      res.status(200).json(project);
+  } catch (error) {
+      res.status(400).json({ error: error.message });
+  }
 };
 
 // Delete a specific project
@@ -122,7 +102,6 @@ exports.deleteProject = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
-
 // Get all tasks with assignee details for a project
 exports.getProjectTasksWithAssignees = async (req, res) => {
     const { projectId } = req.params;
@@ -166,7 +145,6 @@ exports.getProjectTasksWithAssignees = async (req, res) => {
     }
   };
 
-
 exports.getProjectsWithTaskCount = async (req, res) => {
   try {
       const projectsWithTaskCount = await Project.aggregate([
@@ -201,9 +179,7 @@ exports.getProjectsWithTaskCount = async (req, res) => {
   } catch (error) {
       res.status(500).send(error);
   }
-};
-
-  
+};  
 exports.getProjectTeamMembers = async (req, res) => {
   try {
     const project = await Project.findById(req.params.projectId).populate('team');
@@ -211,6 +187,51 @@ exports.getProjectTeamMembers = async (req, res) => {
       return res.status(404).json({ error: 'Project not found' });
     }
     res.status(200).json(project.team); // Use 'team' instead of 'teamMembers'
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.addTeamMember = async (req, res) => {
+  try {
+    const { projectId } = req.params;
+    const { userId } = req.body;
+
+    const project = await Project.findById(projectId);
+    if (!project) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+
+    if (project.team.includes(userId)) {
+      return res.status(400).json({ error: 'User is already a team member' });
+    }
+
+    project.team.push(userId);
+    await project.save();
+
+    res.status(200).json(project.team);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+exports.removeTeamMember = async (req, res) => {
+  try {
+    const { projectId, userId } = req.params;
+
+    const project = await Project.findById(projectId);
+    if (!project) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+
+    if (!project.team.includes(userId)) {
+      return res.status(400).json({ error: 'User is not a team member' });
+    }
+
+    project.team.pull(userId);
+    await project.save();
+
+    res.status(200).json(project.team);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

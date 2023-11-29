@@ -8,11 +8,16 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import EditIcon from '@mui/icons-material/Edit';
 import { useTheme } from '@mui/material/styles';
 import typographyStyles from '../../utils/typographyStyles';
+import { useAuth } from '../../hooks/useAuth';
+import LoadingSpinner from '../common/LoadingSpinner'; // Import the LoadingSpinner component
 
 const Project = () => {
   const [project, setProject] = useState(null);
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
   const { projectId } = useParams();
+  const { user, token } = useAuth(); // Destructure the needed values from useAuth
+  
   const theme = useTheme();
 
   const formatDate = (dateString) => {
@@ -20,19 +25,38 @@ const Project = () => {
     return new Date(dateString).toLocaleDateString(undefined, options);
   };
 
-  useEffect(() => {
-    const fetchProjectDetails = async () => {
-      try {
-        const response = await axios.get(`http://localhost:3000/projects/${projectId}`);
-        setProject(response.data);
-      } catch (err) {
+
+  const fetchProjectDetails = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get(`http://localhost:3000/projects/${projectId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`, // Use the token from useAuth
+        },
+      });
+      setProject(response.data);
+      setError('');
+    } catch (err) {
+      if (err.response?.status === 401) {
+        // Handle unauthorized error, e.g., by calling a logout function from useAuth or redirecting to login page
+        setError('Not authorized. Please login.');
+      } else {
         setError(err.response?.data?.error || 'Error fetching project details');
       }
-    };
-    fetchProjectDetails();
-  }, [projectId]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  if (!project) return <p>Loading...</p>;
+  useEffect(() => {
+    if (user) { // Check if the user is authenticated before fetching project details
+      fetchProjectDetails();
+    }
+  }, [projectId, user, token]); // Add user and token as dependencies
+
+  if (loading) {
+    return <LoadingSpinner />; // Use the LoadingSpinner component
+  }
 
   return (
     <Container maxWidth="x-lg" sx={{ my: 3, flexGrow: 1, p: 2, height: 'auto' }}>
@@ -58,17 +82,17 @@ const Project = () => {
         <Box sx={ typographyStyles.projectDescription }>
        
         <Typography variant='body2'>
-        {project.description}
+        {project?.description}
         </Typography>
        
         </Box>
         <Box sx={{ }}>
         <Typography variant="subtitle1" sx={typographyStyles.projectDates}>
         <Typography variant="body1"
-        sx={typographyStyles.projectDate}><strong>Start Date: </strong> {formatDate(project.startDate)}
+        sx={typographyStyles.projectDate}><strong>Start Date: </strong> {formatDate(project?.startDate)}
         </Typography>
         <Typography variant="body1"
-        sx={typographyStyles.projectDate}><strong>End Date: </strong> {formatDate(project.endDate)}
+        sx={typographyStyles.projectDate}><strong>End Date: </strong> {formatDate(project?.endDate)}
         </Typography>
         </Typography>
         ,</Box>
@@ -77,22 +101,22 @@ const Project = () => {
         <Typography variant="body1"
         sx={typographyStyles.projectStatus}>
           <strong>Status:</strong>
-          <Chip label={project.status} sx={{ bgcolor: theme.palette.status[project.status.toLowerCase()], color: 'common.white', ml: 1, size: "medium" }} />
+          <Chip label={project?.status} sx={{ bgcolor: theme.palette.status[project?.status.toLowerCase()], color: 'common.white', ml: 1, size: "medium" }} />
         </Typography>
         <Typography variant="body1"
         sx={typographyStyles.projectPriority}>
           <strong>Priority:</strong>
-          <Chip label={project.priority} sx={{ bgcolor: theme.palette.priority[project.priority.toLowerCase()], color: 'common.white', ml: 1, size: "medium" }} />
+          <Chip label={project?.priority} sx={{ bgcolor: theme.palette.priority[project?.priority.toLowerCase()], color: 'common.white', ml: 1, size: "medium" }} />
         </Typography>
         </Typography>
         </Box>
-        <Typography variant="body1"><strong>Budget:</strong> ${project.budget.toLocaleString()}</Typography>
+        <Typography variant="body1"><strong>Budget:</strong> ${project?.budget.toLocaleString()}</Typography>
       </Paper>
 
       <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', overflowY: 'auto', p: 2}}>
         <Box sx={{ flex: 1, mr: 2 }}>
           {/* Place other project-specific components here if needed */}
-          <PhaseList projectId={project._id} /> {/* Integrate PhaseList here */}
+          <PhaseList projectId={project?._id} /> {/* Integrate PhaseList here */}
         </Box>
         <Box sx={{ flex: 1, mr: 2 }}>
           {/* Place other project-specific components here if needed */}
@@ -103,7 +127,7 @@ const Project = () => {
         
         <Box sx={{ flex: 1, maxHeight: 'auto',mr: 2 }}>
           <TaskList 
-          projectId={project._id}
+          projectId={project?._id}
           
           />
         </Box>

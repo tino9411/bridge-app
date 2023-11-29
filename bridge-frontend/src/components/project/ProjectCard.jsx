@@ -12,10 +12,12 @@ import {
   Typography
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
+import EditRoundedIcon from '@mui/icons-material/EditRounded';
+
 import { green, orange, red, blue, grey } from '@mui/material/colors';
 import { formatDistance } from 'date-fns';
 
-const ProjectCard = ({ project, onDelete }) => {
+const ProjectCard = ({ project, onDelete, openEditModal }) => {
   const navigate = useNavigate();
 
 // Function to get a human-readable string representing the time since last update
@@ -26,16 +28,16 @@ const timeSinceLastUpdate = (updatedAt) => {
   // Define a theme object or use ThemeProvider to globally define these
   const theme = {
     status: {
-      'Not Started': blue[500],
-      'In Progress': orange[500],
-      'Completed': green[500],
-      'On Hold': red[500],
+      'planning': blue[500],
+      'in progress': orange[500],
+      'completed': green[500],
+      'on hold': red[500],
     },
     priority: {
-      Low: green[700],
-      Medium: orange[700],
-      High: red[700],
-      New: grey[700],
+      low: green[700],
+      medium: orange[700],
+      high: red[700],
+      new: grey[700],
     },
 
     title: {
@@ -51,6 +53,11 @@ const timeSinceLastUpdate = (updatedAt) => {
     const month = String(date.getMonth() + 1).padStart(2, "0"); // Months are 0-based
     const year = date.getFullYear();
     return `${day}-${month}-${year}`;
+  };
+
+  const handleEditClick = (event) => {
+    event.stopPropagation(); // Prevent card click event
+    openEditModal(project); // openEditModal should be passed as a prop from Dashboard
   };
 
   const handleDelete = async (event) => {
@@ -74,27 +81,34 @@ const timeSinceLastUpdate = (updatedAt) => {
     <Card
       sx={{
         maxWidth: 250,
+        minWidth: 250,
+        flexWrap: 'wrap',
         boxShadow: 3,
         '&:hover': {
           transform: 'translateY(-10px)',
           boxShadow:8,
         },
-        m: 2,
         borderRadius: 5, // theme.shape.borderRadius could also be used if defined
         borderColor: grey[300],
         '& .MuiCardHeader-action': {
-          alignSelf: 'center',
         }
       }}
       onClick={goToProjectDetails}
     >
       <CardHeader
         action={
-          <Tooltip title="Delete Project">
-            <IconButton aria-label="delete" size="small" onClick={handleDelete}>
-  <DeleteIcon fontSize="small" />
-</IconButton>
-          </Tooltip>
+          <>
+            <Tooltip title="Edit Project">
+            <IconButton aria-label="edit" size="small" onClick={handleEditClick}>
+      <EditRoundedIcon fontSize="small" />
+    </IconButton>
+            </Tooltip>
+            <Tooltip title="Delete Project">
+              <IconButton aria-label="delete" size="small" onClick={handleDelete}>
+                <DeleteIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+          </>
         }
         title={project.name}
         subheader={`${formatDate(project.startDate)} - ${formatDate(project.endDate)}`}

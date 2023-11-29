@@ -12,6 +12,11 @@ import Project from './components/project/Project';
 import EditProject from './components/project/EditProject'
 import TaskList from './components/task/TaskList';
 import ProjectList from './components/project/ProjectList';
+import { AuthProvider } from './hooks/useAuth';
+import { ProjectProvider } from './contexts/ProjectContext';
+import { UserProvider } from './contexts/UserContext';
+import { TeamProvider } from './contexts/TeamContext';
+import { TaskProvider } from './contexts/TaskContext';
 
 const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -40,6 +45,11 @@ const App = () => {
 
   return (
     <ThemeProvider theme={theme}>
+    <AuthProvider>
+    <UserProvider>
+    <ProjectProvider>
+    <TeamProvider>
+    <TaskProvider>
     <Router>
       <Routes>
         <Route path="/" element={<Navigate replace to="/dashboard" />} />
@@ -82,6 +92,11 @@ const App = () => {
         {/* Add more routes as needed */}
       </Routes>
     </Router>
+    </TaskProvider>
+    </TeamProvider>
+    </ProjectProvider>
+    </UserProvider>
+    </AuthProvider>
     </ThemeProvider>
   );
 };

@@ -43,8 +43,8 @@ const projectSchema = new Schema({
   },
   priority: {
     type: String,
-    enum: ['New', 'Low', 'Medium', 'High'],
-    default: 'New'
+    enum: ['new', 'low', 'medium', 'high'],
+    default: 'new'
   },
   startDate: {
     type: Date,
@@ -56,8 +56,8 @@ const projectSchema = new Schema({
   },
   status: {
     type: String,
-    enum: ['Not Started', 'In Progress', 'Completed', 'On Hold'],
-    default: 'Not Started'
+    enum: ['planning', 'in progress', 'completed', 'on hold'],
+    default: 'planning'
   },
   budget: {
     type: Number,

@@ -24,17 +24,24 @@ import axios from "axios";
 import { formatDate } from "../../utils/dateUtils";
 import { useTheme } from "@mui/material/styles";
 import { sortTasks, filterTasks } from "../../utils/taskUtils";
-import useFetchData from "../../hooks/useFetchData";
 import useComments from "../../hooks/useComments";
+import { useAuth } from "../../hooks/useAuth";
 
 const TaskAssigned = ({ tasks }) => {
   const [sortField, setSortField] = useState("dueDate"); // default sorting by dueDate
   const [filterStatus, setFilterStatus] = useState(""); // no filter by default
   const [selectedTask, setSelectedTask] = useState(null); // State for the selected task
-  const token = localStorage.getItem("token"); // Replace with your token retrieval method
+  // In your TaskAssigned component
+  const { user, token } = useAuth();
+
+  // Now you can use `user` and `token` directly in your component without passing them as props.
+
   const [error, setError] = useState(""); // State to store error
-  const { data: currentUser, error: userError } = useFetchData("http://localhost:3000/users/profile", token);
-  const [comments, setComments] = useComments(selectedTask ? selectedTask._id : null, token);
+ 
+  const [comments, setComments] = useComments(
+    selectedTask ? selectedTask._id : null,
+    token
+  );
 
   // Define a theme object or use ThemeProvider to globally define these
   const theme = useTheme();
@@ -49,18 +56,23 @@ const TaskAssigned = ({ tasks }) => {
     setFilterStatus(event.target.value);
   };
 
-// Inside your component
-const sortedAndFilteredTasks = tasks 
-  ? sortTasks(filterTasks(tasks, filterStatus), sortField)
-    .reduce((acc, task) => {
-      const projectName = task.project.name;
-      if (!acc[projectName]) {
-        acc[projectName] = [];
-      }
-      acc[projectName].push(task);
-      return acc;
-    }, {})
-  : {};
+  // Inside your component
+  const sortedAndFilteredTasks = tasks
+    ? sortTasks(filterTasks(tasks, filterStatus), sortField).reduce(
+        (acc, task) => {
+          // Check that task.project is not null before accessing its properties
+          if (task.project) {
+            const projectName = task.project.name;
+            if (!acc[projectName]) {
+              acc[projectName] = [];
+            }
+            acc[projectName].push(task);
+          }
+          return acc;
+        },
+        {}
+      )
+    : {};
 
   const handleTaskClick = (task) => {
     setSelectedTask(task); // Set the selected task
@@ -69,7 +81,6 @@ const sortedAndFilteredTasks = tasks
   const handleCloseModal = () => {
     setSelectedTask(null); // Reset the selected task when the modal is closed
   };
-
 
   const addComment = async (commentData) => {
     try {
@@ -94,7 +105,7 @@ const sortedAndFilteredTasks = tasks
   // Function to add a new comment to state and to the database
   const handleAddComment = (newCommentText) => {
     const newComment = {
-      author: currentUser.username,
+      author: user.username,
       content: newCommentText,
     };
 
@@ -110,11 +121,10 @@ const sortedAndFilteredTasks = tasks
     );
     setComments(updatedComments);
   };
-  
-  if (!tasks || !currentUser) {
+
+  if (!tasks || !user) {
     return <div>Loading...</div>; // or any other placeholder
   }
-  
 
   return (
     <Card

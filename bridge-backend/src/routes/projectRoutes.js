@@ -6,10 +6,11 @@ const {
     getProject,
     updateProject,
     deleteProject,
-    updateProjectDetails,
     getProjectTasksWithAssignees,
     getProjectsWithTaskCount,
     getProjectTeamMembers,
+    addTeamMember,
+    removeTeamMember,
   } = require('../controllers/projectController');
 
 
@@ -28,7 +29,7 @@ router.get('/', authMiddleware, getAllProjects);
 router.get('/:id', authMiddleware, getProject);
 
 // Route to update a specific project
-router.put('/:id', authMiddleware, checkProjectManagerRole, updateProject);
+router.patch('/:id', authMiddleware, checkProjectManagerRole, updateProject);
 
 // Route to delete a specific project
 router.delete('/:id', authMiddleware, checkProjectManagerRole, deleteProject);
@@ -39,10 +40,11 @@ router.get('/:projectId/tasks-with-assignees', authMiddleware, getProjectTasksWi
 // Route to get all projects with task count
 router.get('/projects-with-task-count', authMiddleware, getProjectsWithTaskCount);
 
-// Route for updating project details like start date, end date, and budget details
-router.patch('/:projectId/details', authMiddleware, checkProjectManagerRole, updateProjectDetails);
-
 //Route to get team members of a project
 router.get('/:projectId/team', authMiddleware, checkProjectManagerRole, getProjectTeamMembers);
+//Route to add team members of a project
+router.post('/:projectId/team', authMiddleware, checkProjectManagerRole, addTeamMember);
+//Route to delete team members of a project
+router.delete('/:projectId/team', authMiddleware, checkProjectManagerRole, removeTeamMember);
 
 module.exports = router;
