@@ -9,7 +9,8 @@ import {
   Chip,
   Box,
   Tooltip,
-  Typography
+  Typography,
+  Grid,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditRoundedIcon from '@mui/icons-material/EditRounded';
@@ -80,10 +81,8 @@ const timeSinceLastUpdate = (updatedAt) => {
   return (
     <Card
       sx={{
-        maxWidth: 250,
-        minWidth: 250,
-        flexWrap: 'wrap',
         boxShadow: 3,
+        flexGrow: 1,
         '&:hover': {
           transform: 'translateY(-10px)',
           boxShadow:8,
@@ -98,6 +97,7 @@ const timeSinceLastUpdate = (updatedAt) => {
       <CardHeader
         action={
           <>
+          <Grid container spacing={1}>
             <Tooltip title="Edit Project">
             <IconButton aria-label="edit" size="small" onClick={handleEditClick}>
       <EditRoundedIcon fontSize="small" />
@@ -108,6 +108,7 @@ const timeSinceLastUpdate = (updatedAt) => {
                 <DeleteIcon fontSize="small" />
               </IconButton>
             </Tooltip>
+            </Grid>
           </>
         }
         title={project.name}

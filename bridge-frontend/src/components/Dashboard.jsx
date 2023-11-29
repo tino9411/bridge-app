@@ -120,10 +120,10 @@ const Dashboard = ({ onLogout }) => {
           Dashboard
         </Typography>
 
-        <Grid container
+        <Grid container spacing={2}
         sx={{
           border: "1px solid #ccc",
-          height: "auto",
+          height: "900px",
 
         }}
         >
@@ -140,7 +140,7 @@ const Dashboard = ({ onLogout }) => {
               Create New Project
             </Button>
             {projects && projects.length > 0 ? (
-              <Grid container rowSpacing={3}
+              <Grid container spacing={2}
                sx={{
                     border: "1px solid #ccc",
                     borderRadius: "10px",
@@ -150,7 +150,7 @@ const Dashboard = ({ onLogout }) => {
                   }}  
               >
                 {projects.map((project) => (
-                  <Grid item key={project._id} xs={12} sm={6} md={3}>
+                  <Grid item key={project._id} xs={12} sm={6} md={4} lg={3}>
                     <ProjectCard
                       project={project}
                       onDelete={() => deleteProject(project._id)}
