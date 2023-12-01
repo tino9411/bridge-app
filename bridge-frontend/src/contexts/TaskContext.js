@@ -37,10 +37,44 @@ export const TaskProvider = ({ children }) => {
     }
   };
 
+  const searchTasks = async (filters) => {
+    try {
+      const response = await axios.get('http://localhost:3000/projects/tasks/search', {
+        params: filters,
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setTasks(response.data);
+    } catch (error) {
+      console.error('Error searching tasks', error);
+    }
+  };
+
+  const requestToJoinTask = async (taskId, userId, message) => {
+    try {
+      await axios.post(`http://localhost:3000/tasks/${taskId}/request-to-join`, {
+        userId, message,
+      }, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      // Handle successful request (e.g., show a notification or update UI)
+    } catch (error) {
+      console.error('Error requesting to join task', error);
+    }
+  };
+
+
   // Add other task-related methods as needed (e.g., createTask, updateTask, deleteTask)
 
   return (
-    <TaskContext.Provider value={{ tasks, assignedTasks, fetchProjectTasks, fetchAssignedTasks }}>
+    <TaskContext.Provider 
+    value={{ 
+        tasks, 
+        assignedTasks, 
+        fetchProjectTasks, 
+        fetchAssignedTasks,
+        searchTasks,
+        requestToJoinTask,
+         }}>
       {children}
     </TaskContext.Provider>
   );

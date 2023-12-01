@@ -4,7 +4,141 @@ const Project = require("../models/project");
 const Task = require("../models/task");
 const User = require("../models/user");
 const Phase = require("../models/phase");
+const Notification = require("../models/notification");
 
+
+// Function to search tasks based on various filters
+// Search for tasks based on filters
+exports.searchTasks = async (req, res) => {
+    try {
+      const { keywords, categories, skills, rate, location, timeCommitment } = req.query;
+      let query = {};
+  
+      if (keywords) {
+        query.$text = { $search: keywords };
+      }
+      if (categories) {
+        query.categories = { $in: categories.split(',') };
+      }
+      if (skills) {
+        query.skillsNeeded = { $in: skills.split(',') };
+      }
+      if (rate) {
+        let [minRate, maxRate] = rate.split('-').map(Number);
+        query.rate = { $gte: minRate, $lte: maxRate };
+      }
+      if (location) {
+        query.location = location;
+      }
+      if (timeCommitment) {
+        query.timeCommitment = timeCommitment;
+      }
+  
+      const tasks = await Task.find(query).populate('project', 'name');
+      res.status(200).json(tasks);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  };
+ 
+// Request to join a task
+exports.requestToJoinTask = async (req, res) => {
+    const { taskId } = req.params;
+    const { userId, message } = req.body;
+  
+    try {
+      const task = await Task.findById(taskId);
+      if (!task) {
+        return res.status(404).json({ error: "Task not found" });
+      }
+  
+      // Add request to join
+      task.requestToJoin.push({ userId, message });
+      await task.save();
+  
+      // Notify project manager
+      const projectManagerId = task.project.projectManager;
+      const notification = new Notification({
+        recipient: projectManagerId,
+        message: `User ${userId} requested to join task ${taskId}`,
+        relatedTo: taskId,
+      });
+      await notification.save();
+  
+      res.status(200).json({ message: "Request to join task sent" });
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  };
+
+// Function to approve or deny a task join request
+exports.respondToJoinRequest = async (req, res) => {
+    const { taskId, requestId } = req.params;
+  const { decision } = req.body; // 'approve' or 'deny'
+
+  try {
+    const task = await Task.findById(taskId);
+    if (!task) {
+      return res.status(404).json({ error: "Task not found" });
+    }
+
+    const requestIndex = task.requestToJoin.findIndex(request => request._id.toString() === requestId);
+    if (requestIndex === -1) {
+      return res.status(404).json({ error: "Request not found" });
+    }
+
+    if (decision === 'approve') {
+      task.requestToJoin[requestIndex].status = 'approved';
+      // Additional logic to handle approved request
+    } else {
+      task.requestToJoin[requestIndex].status = 'denied';
+    }
+
+    await task.save();
+    res.status(200).json({ message: `Request ${decision}` });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+};
+
+
+// View detailed task information
+exports.getTaskDetails = async (req, res) => {
+    const { taskId } = req.params;
+  
+    try {
+      const task = await Task.findById(taskId)
+        .populate('assignee')
+        .populate('project', 'name')
+        .populate('comments');
+      if (!task) {
+        return res.status(404).json({ error: "Task not found" });
+      }
+  
+      res.status(200).json(task);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  };
+  
+
+// Leave feedback for a completed task
+exports.leaveFeedback = async (req, res) => {
+    try {
+      const { taskId } = req.params;
+      const { userId, rating, comment } = req.body;
+  
+      const task = await Task.findById(taskId);
+      if (!task) return res.status(404).json({ error: "Task not found" });
+  
+      task.feedbacks.push({ userId, rating, comment });
+      await task.save();
+  
+      res.status(200).json({ message: "Feedback submitted successfully" });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  };
 
 // Add a new task to a project
 exports.addTask = async (req, res) => {
@@ -12,17 +146,21 @@ exports.addTask = async (req, res) => {
     console.log("Received task data:", req.body);
     const { projectId } = req.params;
     const {
-      title,
-      description,
-      status,
-      priority,
-      phase,
-      skillsNeeded,
-      assignee,
-      dueDate,
-      rate,
-      files,
-    } = req.body;
+        title,
+        description,
+        status,
+        priority,
+        phase,
+        skillsNeeded,
+        assignee,
+        dueDate,
+        rate,
+        files,
+        checklistItems,
+        tags,
+        polls
+      } = req.body;
+  
 
     // Create a task object with only the provided fields
     const taskData = {
@@ -36,6 +174,9 @@ exports.addTask = async (req, res) => {
       dueDate,
       rate,
       files,
+      checklistItems,
+      tags,
+      polls
     };
 
     // Add assignee only if it's provided
@@ -221,3 +362,52 @@ exports.assignTask = async (req, res) => {
     res.status(400).json({ error: error.message });
   }
 };
+
+// Update Checklist Items
+exports.updateChecklistItems = async (req, res) => {
+    const { taskId } = req.params;
+    const { checklistItems } = req.body;
+  
+    try {
+      const updatedTask = await Task.findByIdAndUpdate(taskId, 
+        { $set: { checklistItems } },
+        { new: true }
+      );
+      res.status(200).json(updatedTask);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  };
+  
+  // Add Poll to a Task
+  exports.addPollToTask = async (req, res) => {
+    const { taskId } = req.params;
+    const { poll } = req.body;
+  
+    try {
+      const updatedTask = await Task.findByIdAndUpdate(taskId, 
+        { $push: { polls: poll } },
+        { new: true }
+      );
+      res.status(200).json(updatedTask);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  };
+  
+ // Add a history log to a task
+exports.addHistoryLog = async (req, res) => {
+    const { taskId } = req.params;
+    const { log } = req.body; // log should be an object with date, action, description
+  
+    try {
+      const updatedTask = await Task.findByIdAndUpdate(taskId, 
+        { $push: { history: log } },
+        { new: true }
+      );
+      res.status(200).json(updatedTask);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  };
+   

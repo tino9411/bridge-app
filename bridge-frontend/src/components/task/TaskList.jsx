@@ -239,7 +239,7 @@ const handleCreateTask = async (newTaskData) => {
     <Card
       sx={{
         maxHeight: "450px",
-        maxWidth: "400px",
+        width: "450px",
         display: "flex",
         flexDirection: "column",
         boxShadow: 3,
@@ -265,7 +265,7 @@ const handleCreateTask = async (newTaskData) => {
         <FormControl
           variant="outlined"
           size="small"
-          sx={{ width: "100px", m: 1 }}
+          sx={{ width: "200px", m: 1 }}
         >
           <InputLabel>Sort By</InputLabel>
           <Select

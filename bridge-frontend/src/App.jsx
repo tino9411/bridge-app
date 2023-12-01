@@ -9,7 +9,6 @@ import UserProfile from './components/user/UserProfile';
 import Dashboard from './components/Dashboard';
 import Layout from './components/Layout';
 import Project from './components/project/Project';
-import EditProject from './components/project/EditProject'
 import TaskList from './components/task/TaskList';
 import ProjectList from './components/project/ProjectList';
 import { AuthProvider } from './hooks/useAuth';
@@ -17,6 +16,7 @@ import { ProjectProvider } from './contexts/ProjectContext';
 import { UserProvider } from './contexts/UserContext';
 import { TeamProvider } from './contexts/TeamContext';
 import { TaskProvider } from './contexts/TaskContext';
+import TaskSearch from './components/task/TaskSearch';
 
 const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -80,15 +80,13 @@ const App = () => {
             <Project />
           </Layout>
         } />
-        <Route path="/edit-project/:projectId" element={
+
+<Route path="/task-search" element={
           <Layout isAuthenticated={isAuthenticated} onLogout={handleLogout}>
-            <EditProject />
+            <TaskSearch />
           </Layout>
         } />
-        <Route path="/create-task/:projectId" element={
-          <Layout isAuthenticated={isAuthenticated} onLogout={handleLogout}>
-          </Layout>
-        } />
+
         {/* Add more routes as needed */}
       </Routes>
     </Router>

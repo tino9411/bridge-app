@@ -17,6 +17,7 @@ import DashboardIcon from '@mui/icons-material/Dashboard';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import GroupIcon from '@mui/icons-material/Group';
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
+import SearchIcon from '@mui/icons-material/Search';
 
 const Sidebar = ({ onLogout }) => {
   const navigate = useNavigate();
@@ -50,6 +51,10 @@ const Sidebar = ({ onLogout }) => {
       <Divider />
       <List>
         {/* Sidebar Items */}
+        <ListItem button component={Link} to="/task-search">
+  <ListItemIcon><SearchIcon /></ListItemIcon>
+  <ListItemText primary="Task Search" />
+</ListItem>
         <ListItem button component={Link} to="/">
           <ListItemIcon><HomeIcon /></ListItemIcon>
           <ListItemText primary="Dashboard" />
@@ -75,6 +80,7 @@ const Sidebar = ({ onLogout }) => {
           <ListItemIcon><ExitToAppIcon /></ListItemIcon>
           <ListItemText primary="Logout" />
         </ListItem>
+
       </List>
     </Drawer>
   );

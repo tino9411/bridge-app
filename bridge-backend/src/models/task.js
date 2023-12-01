@@ -1,36 +1,16 @@
-/**
- * task.js
- * @typedef {import('mongoose').Schema} Schema
- * @typedef {import('mongoose').Model} Model
- * @typedef {import('mongoose').Document} Document
- * 
- * @typedef {Object} Task
- * @property {import('mongoose').Types.ObjectId} project - The ID of the project the task belongs to.
- * @property {string} title - The title of the task.
- * @property {string} [description] - The description of the task.
- * @property {'open' | 'in progress' | 'on hold' | 'completed'} [status='open'] - The status of the task.
- * @property {'low' | 'medium' | 'high'} [priority='medium'] - The priority of the task.
- * @property {import('mongoose').Types.ObjectId} [phase] - The ID of the phase the task belongs to.
- * @property {string[]} [skillsNeeded] - The skills needed for the task.
- * @property {import('mongoose').Types.ObjectId} [assignee] - The ID of the user assigned to the task.
- * @property {Date} [dueDate] - The due date of the task.
- * @property {number} [rate] - The rate of the task.
- * @property {import('mongoose').Types.ObjectId[]} [files] - The IDs of the files associated with the task.
- * @property {import('mongoose').Types.ObjectId[]} [comments] - The IDs of the comments associated with the task.
- * @property {Date} createdAt - The creation date of the task.
- * @property {Date} updatedAt - The last update date of the task.
- * 
- * @type {Schema<Task, Model<Task, Document>, Task>}
- */
-
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
+
+const checklistItemSchema = new Schema({
+  text: String,
+  isCompleted: { type: Boolean, default: false }
+});
 
 const taskSchema = new Schema({
     project: {
         type: Schema.Types.ObjectId,
         required: true,
-        ref: 'Project' // Reference to the Project model
+        ref: 'Project'
     },
     title: {
         type: String,
@@ -48,40 +28,86 @@ const taskSchema = new Schema({
     },
     priority: {
         type: String,
-        enum: ['new','low', 'medium', 'high'],
+        enum: ['new', 'low', 'medium', 'high'],
         default: 'low'
     },
-    phase: { // Adjusted to reference the Phase model
+    phase: {
         type: Schema.Types.ObjectId,
         ref: 'Phase'
-      },
+    },
     skillsNeeded: [{
         type: String,
         trim: true
-        }],
+    }],
     assignee: {
-      type: Schema.Types.ObjectId,
-      ref: 'User',
-      default: null
+        type: Schema.Types.ObjectId,
+        ref: 'User',
+        default: null
     },
     dueDate: {
         type: Date,
-        default: null // You can set a default due date, if required
+        default: null
     },
     rate: {
         type: Number,
         default: null
-    }, 
+    },
+    categories: [{
+        type: String,
+        trim: true
+    }],
+    location: {
+        type: String,
+        trim: true
+    },
+    timeCommitment: {
+        type: String,
+        enum: ['part-time', 'full-time', 'freelance'],
+        default: 'part-time'
+    },
+    checklistItems: [checklistItemSchema],
+    tags: [{
+        type: String,
+        trim: true
+    }],
+    polls: [{
+        question: String,
+        options: [{ text: String, votes: Number }],
+    }],
+    history: [{
+        date: Date,
+        action: String,
+        description: String
+    }],
+    requestToJoin: [{
+        userId: {
+            type: Schema.Types.ObjectId,
+            ref: 'User'
+        },
+        message: String,
+        status: {
+            type: String,
+            enum: ['pending', 'approved', 'denied'],
+            default: 'pending'
+        }
+    }],
+    feedbacks: [{
+        userId: {
+            type: Schema.Types.ObjectId,
+            ref: 'User'
+        },
+        rating: Number,
+        comment: String
+    }],
     files: [{
         type: Schema.Types.ObjectId,
-        ref: 'File' // Reference to the 'File' model
+        ref: 'File'
     }],
     comments: [{
         type: Schema.Types.ObjectId,
-        ref: 'Comment' // Reference to the 'Comment' model
+        ref: 'Comment'
     }]
-
-}, { timestamps: true }); // Add createdAt and updatedAt fields
+}, { timestamps: true });
 
 const Task = mongoose.model('Task', taskSchema);
 module.exports = Task;

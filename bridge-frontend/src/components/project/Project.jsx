@@ -101,7 +101,7 @@ const Project = () => {
         <Typography variant="body1"
         sx={typographyStyles.projectStatus}>
           <strong>Status:</strong>
-          <Chip label={project?.status} sx={{ bgcolor: theme.palette.status[project?.status.toLowerCase()], color: 'common.white', ml: 1, size: "medium" }} />
+          <Chip label={project?.status} sx={{ bgcolor: theme.palette.statusProject[project?.status.toLowerCase()], color: 'common.white', ml: 1, size: "medium" }} />
         </Typography>
         <Typography variant="body1"
         sx={typographyStyles.projectPriority}>

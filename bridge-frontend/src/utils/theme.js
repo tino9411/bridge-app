@@ -11,6 +11,14 @@ const theme = createTheme({
       "completed": green[500],
       "on hold": red[500],
     },
+
+    statusProject: {
+        "planning": blue[500],
+        "in progress": orange[500],
+        "completed": green[500],
+        "on hold": red[500],
+        },
+        
     priority: {
       low: green[700],
       medium: orange[700],
