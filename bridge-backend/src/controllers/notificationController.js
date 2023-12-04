@@ -3,6 +3,7 @@ const Notification = require('../models/notification');
 const NotificationController = {
     createNotification: async (req, res) => {
         // Implementation
+
     },
     getUserNotifications: async (req, res) => {
         // Implementation

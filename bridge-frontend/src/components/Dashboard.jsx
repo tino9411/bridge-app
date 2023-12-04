@@ -94,13 +94,12 @@ const Dashboard = ({ onLogout }) => {
     if (selectedProjectId) {
       fetchTeam(selectedProjectId); // Fetch team when selectedProjectId changes
     }
-  }, [selectedProjectId, fetchTeam]); // Add fetchTeam as a dependency
+  }, [selectedProjectId]); // Add fetchTeam as a dependency
 
   useEffect(() => {
     if (user) {
       fetchAssignedTasks(user.username);
     }
-    fetchProjectTasks(); // Fetch all tasks
   }, [user]); // Add fetchAssignedTasks as a dependency
 
   if (!user) {

@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import { useParams, Link } from 'react-router-dom';
 import TaskList from '../task/TaskList';
 import PhaseList from '../phase/PhaseList'; 
@@ -9,53 +8,28 @@ import EditIcon from '@mui/icons-material/Edit';
 import { useTheme } from '@mui/material/styles';
 import typographyStyles from '../../utils/typographyStyles';
 import { useAuth } from '../../hooks/useAuth';
+import { useProjects } from '../../contexts/ProjectContext';
 import LoadingSpinner from '../common/LoadingSpinner'; // Import the LoadingSpinner component
+import Snackbar from '@mui/material/Snackbar';
+import {formatDate} from '../../utils/dateUtils';
 
 const Project = () => {
-  const [project, setProject] = useState(null);
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(true);
   const { projectId } = useParams();
-  const { user, token } = useAuth(); // Destructure the needed values from useAuth
-  
+  const { user, token } = useAuth();
+  const [error, setError] = useState(null);
+  const { projects, fetchProjects, snackbarOpen, snackbarMessage, snackbarSeverity, handleSnackbarClose } = useProjects();
   const theme = useTheme();
 
-  const formatDate = (dateString) => {
-    const options = { year: 'numeric', month: 'long', day: 'numeric' };
-    return new Date(dateString).toLocaleDateString(undefined, options);
-  };
-
-
-  const fetchProjectDetails = async () => {
-    setLoading(true);
-    try {
-      const response = await axios.get(`http://localhost:3000/projects/${projectId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`, // Use the token from useAuth
-        },
-      });
-      setProject(response.data);
-      setError('');
-    } catch (err) {
-      if (err.response?.status === 401) {
-        // Handle unauthorized error, e.g., by calling a logout function from useAuth or redirecting to login page
-        setError('Not authorized. Please login.');
-      } else {
-        setError(err.response?.data?.error || 'Error fetching project details');
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    if (user) { // Check if the user is authenticated before fetching project details
-      fetchProjectDetails();
+    if (user) {
+      fetchProjects(token);
     }
-  }, [projectId, user, token]); // Add user and token as dependencies
+  }, [user, token]);
 
-  if (loading) {
-    return <LoadingSpinner />; // Use the LoadingSpinner component
+  const project = projects.find(p => p._id === projectId);
+
+  if (!project) {
+    return <LoadingSpinner />;
   }
 
   return (
@@ -132,6 +106,13 @@ const Project = () => {
           />
         </Box>
       </Box>
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={6000}
+        onClose={handleSnackbarClose}
+        message={snackbarMessage}
+        severity={snackbarSeverity}
+      />
     </Container>
   );
 };

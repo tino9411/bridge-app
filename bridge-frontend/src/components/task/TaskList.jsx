@@ -1,6 +1,5 @@
 //TaskList.jsx
 import React, { useState, useEffect } from "react";
-import axios from "axios";
 import { useParams } from "react-router-dom";
 import {
   Card,
@@ -31,36 +30,39 @@ import AddRoundedIcon from "@mui/icons-material/AddRounded";
 import { formatDate } from "../../utils/dateUtils";
 import { useTheme } from "@mui/material/styles";
 import { sortTasks, filterTasks } from "../../utils/taskUtils";
-import useFetchData from "../../hooks/useFetchData";
-import useComments from "../../hooks/useComments";
-import CreateTaskModal from "./CreateTaskModal"; // Import the modal componen
+import CreateTaskModal from "./CreateTaskModal"; // Import the modal component
+import EditTaskModal from "./EditTaskModal"; // Import the EditTaskModal component
 import DeleteIcon from "@mui/icons-material/Delete";
-import Alert from '@mui/material/Alert';
-import useSnackbar from "../../hooks/useSnackbar"; // Import the useSnackbar hook
+import Alert from "@mui/material/Alert";
+import { useTasks } from "../../contexts/TaskContext"; // Import the useTasks hook
+import EditRoundedIcon from '@mui/icons-material/EditRounded';
+import { useUser } from "../../contexts/UserContext";
 
 const TaskList = () => {
-  const [tasks, setTasks] = useState([]);
-  const [sortField, setSortField] = useState("dueDate"); // default sorting by dueDate
-  const [filterStatus, setFilterStatus] = useState(""); // no filter by default
+  const {
+    tasks,
+    fetchProjectTasks,
+    deleteTask,
+    addTask,
+    updateTask,
+    addHistoryLogToTask,
+    snackbarOpen,
+    snackbarMessage,
+    snackbarSeverity,
+    showSnackbar,
+    handleSnackbarClose,
+  } = useTasks();
+  const [sortField, setSortField] = useState("dueDate");
+  const [filterStatus, setFilterStatus] = useState("");
   const [selectedTask, setSelectedTask] = useState(null);
-  const token = localStorage.getItem("token"); // Replace with your token retrieval method
-  const [error, setError] = useState("");
-  const { data: currentUser, error: userError } = useFetchData(
-    "http://localhost:3000/users/profile",
-    token
-  );
-
-  const [comments, setComments, isLoadingComments] = useComments(
-    selectedTask ? selectedTask._id : null,
-    token
-  );
-
   const { projectId } = useParams();
+  const [error, setError] = useState(null);
   const theme = useTheme();
-  const [showCreateModal, setShowCreateModal] = useState(false); // State to control the modal visibility
-  const [openDialog, setOpenDialog] = useState(false); // State to control the dialog visibility
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false); // State to manage EditTaskModal visibility
+  const [openDialog, setOpenDialog] = useState(false);
   const [selectedTaskId, setSelectedTaskId] = useState(null);
-  const { snackbarOpen, snackbarMessage, snackbarSeverity, showSnackbar, handleSnackbarClose } = useSnackbar();
+  const { user } = useUser();
 
   // Handler for changing sort field
   const handleSortChange = (event) => {
@@ -72,23 +74,9 @@ const TaskList = () => {
     setFilterStatus(event.target.value);
   };
 
-  const handleDeleteTask = async (taskId) => {
-    setOpenDialog(false);
-    try {
-      const response = await axios.delete(
-        `http://localhost:3000/projects/${projectId}/tasks/${taskId}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      if (response.status === 200) {
-        setTasks(tasks.filter((task) => task._id !== taskId));
-        showSnackbar("Task successfully deleted", "success");
-      } else {
-        showSnackbar("Task could not be deleted due to constraints", "error");
-      }
-    } catch (err) {
-      showSnackbar("Failed to delete task. Please try again later.", "error");
-    }
-  };
+  useEffect(() => {
+    fetchProjectTasks(projectId); // Replace the direct API call with fetchProjectTasks from TaskContext
+  }, [projectId]);
 
   const handleOpenDialog = (taskId, event) => {
     event.stopPropagation(); // This will prevent the event from bubbling up to the parent elements
@@ -119,113 +107,103 @@ const TaskList = () => {
     setSelectedTask(task); // Set the selected task
   };
 
+  const handleTaskEditClick = (task) => {
+    setSelectedTask(task); // Set the selected task
+    setShowEditModal(true); // Open the modal
+  }
+
+  const handleCloseEditModal = () => {
+    setShowEditModal(false); // Close the EditTaskModal
+    setSelectedTask(null); // Reset the selected task
+  };
+
   const handleCloseModal = () => {
     setSelectedTask(null); // Reset the selected task when the modal is closed
   };
 
-
-// Function to handle the submission of a new task
-const handleCreateTask = async (newTaskData) => {
-  try {
-    // Adjust the formatting of the newTaskData
-    const taskSubmission = {
-      ...newTaskData,
-      phase: newTaskData.phase || null,
-      skillsNeeded: newTaskData.skillsNeeded,
-      rate: parseFloat(newTaskData.rate) || 0,
-    };
-
-    const response = await axios.post(
-      `http://localhost:3000/projects/${projectId}/tasks`,
-      taskSubmission,
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-
-    if (response.data) {
-      setTasks([...tasks, response.data]);
-      showSnackbar("Task created successfully", "success");
-    } else {
-      showSnackbar("Failed to create task", "error");
-    }
-  } catch (err) {
-    console.error("Task creation error:", err.response || err);
-    showSnackbar(err.response?.data?.error || "Error creating task", "error");
-  } finally {
-    setShowCreateModal(false); // Close the modal
-  }
-};
-
- // Function to add a new comment to state and to the database
- const handleAddComment = async (newCommentText) => {
-  try {
-    const response = await axios.post(
-      `http://localhost:3000/tasks/${selectedTask._id}/comments`,
-      { content: newCommentText },
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-
-    if (response.data) {
-      setComments([...comments, response.data]);
-      showSnackbar("Comment added successfully", "success");
-    } else {
-      throw new Error("Failed to add comment");
-    }
-  } catch (err) {
-    const errorMsg = err.response?.data?.error || "Error adding comment";
-    showSnackbar(errorMsg, "error");
-  }
-};
-
-  // Function to delete a comment
-  const handleDeleteComment = async (commentId) => {
-    try {
-      const response = await axios.delete(
-        `http://localhost:3000/tasks/${selectedTask._id}/comments/${commentId}`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
-      if (response.data) {
-        const updatedComments = comments.filter((comment) => comment._id !== commentId);
-        setComments(updatedComments);
-        showSnackbar(response.data.message || "Comment deleted successfully", "success");
-      } else {
-        throw new Error("Failed to delete comment");
+  const captureTaskChanges = (oldTask, newTask) => {
+    const changes = [];
+    Object.keys(newTask).forEach(key => {
+      if (newTask[key] !== oldTask[key]) {
+        changes.push({ field: key, oldValue: oldTask[key], newValue: newTask[key] });
       }
+    });
+    return changes;
+  };
+
+  // Function to handle the submission of a new task
+  const handleCreateTask = async (newTaskData) => {
+    try {
+      // Adjust the formatting of the newTaskData
+      const taskSubmission = {
+        ...newTaskData,
+        phase: newTaskData.phase || null,
+        skillsNeeded: newTaskData.skillsNeeded,
+        rate: parseFloat(newTaskData.rate) || 0,
+      };
+
+      await addTask(projectId, taskSubmission); // Use addTask from TaskContext
+
+      const createdTaskId = tasks[tasks.length - 1]._id; // Get the ID of the newly created task
+      const historyLog = {
+        date: new Date(),
+        action: "Task Created",
+        description: `Task '${newTaskData.title}' was created.`
+      };
+
+      await addHistoryLogToTask(createdTaskId, historyLog);
+
+      setShowCreateModal(false); // Close the modal after task creation
     } catch (err) {
-      const errorMsg = err.response?.data?.error || "Error deleting comment";
-      showSnackbar(errorMsg, "error");
+      console.error("Task creation error:", err.response || err);
+      showSnackbar(err.response?.data?.error || "Error creating task", "error");
     }
   };
 
-  useEffect(() => {
-    const fetchTasks = async () => {
-      try {
-        const response = await axios.get(
-          `http://localhost:3000/projects/${projectId}/tasks`
-        );
-        setTasks(response.data);
-      } catch (err) {
-        const errorMsg = err.response
-          ? err.response.data.error
-          : "Error fetching tasks";
-          showSnackbar(error, "error");
-      }
-    };
+  const handleDeleteTask = async (taskId, projectId) => {
+    setOpenDialog(false);
+  
+    try {
+      await deleteTask(taskId, projectId); // Use deleteTask from TaskContext
+  
+      // Add history log after successful task deletion
+      const historyLog = {
+        date: new Date(),
+        action: "Task Deleted",
+        description: `Task with ID '${taskId}' was deleted.`
+      };
+  
+      await addHistoryLogToTask(taskId, historyLog);
+    } catch (err) {
+      console.error("Error deleting task:", err.response || err);
+      showSnackbar(err.response?.data?.error || "Error deleting task", "error");
+    }
+  };
+  
 
-    fetchTasks();
-  }, [projectId]);
+  const handleUpdateTask = async (taskId) => {
+    try {
+      const taskSubmission = {
+        ...selectedTask,
+        phase: selectedTask.phase || null,
+        skillsNeeded: selectedTask.skillsNeeded,
+        rate: parseFloat(selectedTask.rate) || 0,
+      };
+      await updateTask(taskId, taskSubmission); // Use updateTask from TaskContext
+
+   
+    } catch (err) {
+      console.error("Task update error:", err.response || err);
+      showSnackbar(err.response?.data?.error || "Error updating task", "error");
+    }
+  };
+  
 
   useEffect(() => {
     if (error) {
       showSnackbar(error, "error");
     }
   }, [error, showSnackbar]);
-
-  useEffect(() => {
-    if (userError) {
-      showSnackbar(userError, "error");
-    }
-  }, [userError, showSnackbar]);
 
   if (error) {
     return (
@@ -391,11 +369,28 @@ const handleCreateTask = async (newTaskData) => {
                       >
                         Rate: ${task.rate}
                       </Typography>
+                      <Box
+                      sx={{
+                        display: "flex",
+                        flexDirection: "row",
+                        alignItems: "flex-end",
+        
+                        
+                      }}
+                      >
+
                       <IconButton
                         onClick={(event) => handleOpenDialog(task._id, event)}
                       >
                         <DeleteIcon />
                       </IconButton>
+                      <IconButton onClick={(event) => handleTaskEditClick(task._id, event)}>
+        <EditRoundedIcon />
+      </IconButton>
+
+
+                      </Box>
+                     
                     </Box>
                   </ListItem>
                   <Divider variant="middle" sx={{ bgcolor: "grey.800" }} />
@@ -422,28 +417,28 @@ const handleCreateTask = async (newTaskData) => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpenDialog(false)}>Cancel</Button>
-          <Button onClick={() => handleDeleteTask(selectedTaskId)} autoFocus>
+          <Button onClick={() => handleDeleteTask(selectedTaskId, projectId)} autoFocus>
             Delete
           </Button>
         </DialogActions>
       </Dialog>
 
-      <Snackbar open={snackbarOpen} autoHideDuration={6000} onClose={handleSnackbarClose}>
-        <Alert onClose={handleSnackbarClose} severity={snackbarSeverity} sx={{ width: '100%' }}>
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={6000}
+        onClose={handleSnackbarClose}
+      >
+        <Alert
+          onClose={handleSnackbarClose}
+          severity={snackbarSeverity}
+          sx={{ width: "100%" }}
+        >
           {snackbarMessage}
         </Alert>
       </Snackbar>
-      {console.log("In TaskList, addComment is:", handleAddComment)}
 
       {selectedTask && (
-        <TaskModal
-          task={selectedTask}
-          onClose={handleCloseModal}
-          commentsData={comments} // Pass comments to the modal
-          addComment={handleAddComment} // Pass function to add comment
-          deleteComment={handleDeleteComment} // Pass function to delete comments
-          isLoadingComments={isLoadingComments} // Pass the loading state
-        />
+        <TaskModal task={selectedTask} onClose={handleCloseModal} />
       )}
       <CreateTaskModal
         open={showCreateModal}
@@ -451,6 +446,16 @@ const handleCreateTask = async (newTaskData) => {
         onSubmit={handleCreateTask}
         projectId={projectId}
       />
+
+      {/* EditTaskModal component */}
+      {selectedTask && (
+        <EditTaskModal
+          open={showEditModal}
+          onClose={handleCloseEditModal}
+          taskData={selectedTask}
+          projectId={projectId}
+        />
+      )}
     </Card>
   );
 };

@@ -199,15 +199,25 @@ exports.deletePhase = async (req, res) => {
     );
 
     if (deleteTasks) {
-      await Task.updateMany(
-        { _id: { $in: deletedPhase.assignedTasks } },
-        { $unset: { phase: "" } },
-        { session }
-      );
-      await Task.deleteMany(
-        { _id: { $in: deletedPhase.assignedTasks } },
-        { session }
-      );
+      // Retrieve all tasks that were part of the deleted phase
+      const tasks = await Task.find({ _id: { $in: deletedPhase.assignedTasks } }, null, { session });
+
+      // Archive each task and add a history log
+      for (const task of tasks) {
+        task.isArchived = true;
+        task.history.push({
+          date: new Date(),
+          user: req.user._id, // Assuming the user ID is available in req.user
+          action: "Task Archived",
+          details: [{
+            field: "phase",
+            oldValue: phaseId,
+            newValue: null,
+            description: `Task archived due to deletion of phase '${deletedPhase.name}'.`
+          }]
+        });
+        await task.save({ session });
+      }
     }
 
     if (deletedPhase.milestones.length > 0) {
@@ -218,7 +228,7 @@ exports.deletePhase = async (req, res) => {
     }
 
     await session.commitTransaction();
-    res.status(200).json({ success: true, message: "Phase deleted successfully" });
+    res.status(200).json({ success: true, message: "Phase deleted and tasks archived successfully" });
   } catch (error) {
     await session.abortTransaction();
     res.status(500).json({ success: false, error: error.message });
@@ -227,78 +237,109 @@ exports.deletePhase = async (req, res) => {
   }
 };
 
+
+
 // Assign a task to a phase
 exports.assignTaskToPhase = async (req, res) => {
-    const session = await mongoose.startSession();
+  const session = await mongoose.startSession();
   session.startTransaction();
   try {
-    const { phaseId, taskId } = req.params;
+      const { phaseId, taskId } = req.params;
 
-    // Find the phase by its ID
-    const phase = await Phase.findById(phaseId);
-    if (!phase) {
-      return res.status(404).json({ success: false, error: "Phase not found" });
-    }
-
-    // Find the task by its ID
-    const task = await Task.findById(taskId);
-    if (!task) {
-      return res.status(404).json({ success: false, error: "Task not found" });
-    }
-
-    // Check if the task is already assigned to a phase
-    if (task.phase) {
-      return res
-        .status(409)
-        .json({ success: false, error: "Task is already assigned to a phase" });
-    }
-
-    // Update the task with the phase ID
-    task.phase = phaseId;
-    await task.save();
-
-    // Check if the task is already assigned to the phase to avoid duplication
-    if (!phase.assignedTasks.includes(taskId)) {
-        phase.assignedTasks.push(taskId);
-        await phase.save({ session });
-        task.phase = phaseId;
-        await task.save({ session });
+      // Find the phase by its ID
+      const phase = await Phase.findById(phaseId);
+      if (!phase) {
+          return res.status(404).json({ success: false, error: "Phase not found" });
       }
-  
+
+      // Find the task by its ID
+      const task = await Task.findById(taskId);
+      if (!task) {
+          return res.status(404).json({ success: false, error: "Task not found" });
+      }
+
+      // Check if the task is already assigned to a phase
+      if (task.phase) {
+          return res
+              .status(409)
+              .json({ success: false, error: "Task is already assigned to a phase" });
+      }
+
+      // Update the task with the phase ID and add history log
+      task.phase = phaseId;
+     // Only add to history if the phase is being removed
+    if (task.phase && task.phase.toString() === phaseId) {
+      task.history.push({
+        date: new Date(),
+        action: "Task Removed from Phase",
+        user: req.user._id,
+        details: [{
+          field: "phase",
+          oldValue: phase._id,
+          newValue: null,
+          description: `Task removed from phase '${phase.name}'.`
+        }]
+      });
+    }
+      // Save the task within the transaction
+      await task.save({ session });
+
+      // Check if the task is already assigned to the phase to avoid duplication
+      if (!phase.assignedTasks.includes(taskId)) {
+          phase.assignedTasks.push(taskId);
+          await phase.save({ session });
+      }
+
       await session.commitTransaction();
       res.status(200).json({ success: true, phase, task });
-    } catch (error) {
+  } catch (error) {
       await session.abortTransaction();
       res.status(500).json({ success: false, error: error.message });
-    } finally {
+  } finally {
       session.endSession();
-    }
-  };
+  }
+};
+
 
 // Remove a task from a phase
 exports.removeTaskFromPhase = async (req, res) => {
-    const session = await mongoose.startSession();
+  const session = await mongoose.startSession();
   session.startTransaction();
   try {
-    const { phaseId, taskId } = req.params; // Assuming you are getting phaseId and taskId from URL params
+    const { phaseId, taskId } = req.params; 
 
-    // Find the phase by its ID
+    // Find the phase and task by their IDs
     const phase = await Phase.findById(phaseId);
-    if (!phase) {
-      return res.status(404).json({ success: false, error: "Phase not found" });
+    const task = await Task.findById(taskId);
+
+    if (!phase || !task) {
+      return res.status(404).json({ success: false, error: "Phase or Task not found" });
     }
 
     // Check if the task is part of the phase
     if (!phase.assignedTasks.includes(taskId)) {
-      return res
-        .status(404)
-        .json({ success: false, error: "Task not found in the phase" });
+      return res.status(404).json({ success: false, error: "Task not found in the phase" });
     }
 
     // Remove the task from the phase's assignedTasks array
-    phase.assignedTasks = phase.assignedTasks.filter((id) => id.toString() !== taskId);
+    phase.assignedTasks = phase.assignedTasks.filter(id => id.toString() !== taskId);
     await phase.save({ session });
-    await Task.findByIdAndUpdate(taskId, { $unset: { phase: "" } }, { session });
+
+    // Add a history log to the task
+    task.history.push({
+      date: new Date(),
+      action: "Task Removed from Phase",
+      user: req.user._id, // Assuming req.user._id is the ObjectId of the user
+      details: [{
+        field: "phase",
+        oldValue: phase._id,
+        newValue: null,
+        description: `Task removed from phase '${phase.name}'.`
+      }]
+    });
+
+    // Save the task within the transaction
+    await task.save({ session });
 
     await session.commitTransaction();
     res.status(200).json({ success: true, phase });
@@ -309,3 +350,5 @@ exports.removeTaskFromPhase = async (req, res) => {
     session.endSession();
   }
 };
+
+

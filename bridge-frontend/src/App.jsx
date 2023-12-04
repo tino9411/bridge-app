@@ -16,6 +16,7 @@ import { ProjectProvider } from './contexts/ProjectContext';
 import { UserProvider } from './contexts/UserContext';
 import { TeamProvider } from './contexts/TeamContext';
 import { TaskProvider } from './contexts/TaskContext';
+import { CommentProvider } from './contexts/CommentContext';
 import TaskSearch from './components/task/TaskSearch';
 
 const App = () => {
@@ -45,11 +46,11 @@ const App = () => {
 
   return (
     <ThemeProvider theme={theme}>
-    <AuthProvider>
     <UserProvider>
     <ProjectProvider>
     <TeamProvider>
     <TaskProvider>
+    <CommentProvider>
     <Router>
       <Routes>
         <Route path="/" element={<Navigate replace to="/dashboard" />} />
@@ -90,11 +91,11 @@ const App = () => {
         {/* Add more routes as needed */}
       </Routes>
     </Router>
+    </CommentProvider>
     </TaskProvider>
     </TeamProvider>
     </ProjectProvider>
     </UserProvider>
-    </AuthProvider>
     </ThemeProvider>
   );
 };

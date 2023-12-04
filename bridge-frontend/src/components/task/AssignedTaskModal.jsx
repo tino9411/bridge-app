@@ -151,10 +151,10 @@ const AssignedTaskModal = memo(({
             borderTop: "1px solid #ddd",
           }}
         >
-          <Typography variant="subtitle1" component="div">
+          <Typography variant="body2" component="div">
             <strong>Created at:</strong> {formatDate(task.createdAt)}
           </Typography>
-          <Typography variant="subtitle1" component="div">
+          <Typography variant="body2" component="div">
             <strong>Updated at:</strong> {formatDate(task.updatedAt)}
           </Typography>
         </Box>

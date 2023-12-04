@@ -36,6 +36,11 @@ const CreateTaskModal = ({ open, onClose, onSubmit, projectId }) => {
     rate: 0,
     phase: "",
     files: [],
+    categories: [],
+    location: "",
+    timeCommitment: "part-time",
+    tags: [],
+    history: []
   });
 
   const [phases, setPhases] = useState([]);
@@ -212,7 +217,27 @@ const CreateTaskModal = ({ open, onClose, onSubmit, projectId }) => {
                 Upload File(s)
               </Button>
             </label>
-            {/* Other fields like dueDate, rate, etc. */}
+            <TextField
+        label="Location"
+        name="location"
+        fullWidth
+        margin="normal"
+        value={newTask.location}
+        onChange={handleInputChange}
+      />
+      <FormControl fullWidth margin="normal">
+        <InputLabel>Time Commitment</InputLabel>
+        <Select
+          name="timeCommitment"
+          value={newTask.timeCommitment}
+          onChange={handleInputChange}
+          label="Time Commitment"
+        >
+          <MenuItem value="part-time">Part-Time</MenuItem>
+          <MenuItem value="full-time">Full-Time</MenuItem>
+          <MenuItem value="freelance">Freelance</MenuItem>
+        </Select>
+      </FormControl>
             <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}>
               <Button variant="contained" type="submit">
                 Create

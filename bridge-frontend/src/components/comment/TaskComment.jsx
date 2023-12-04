@@ -1,5 +1,5 @@
 // TaskComment.jsx
-import React, { useState, useCallback, memo } from "react";
+import React, { useState, useCallback, memo, useEffect } from "react";
 import {
   List,
   ListItem,
@@ -14,13 +14,19 @@ import {
   Collapse,
   IconButton,
 } from "@mui/material";
+import { Skeleton } from "@mui/material";
 import SendIcon from "@mui/icons-material/Send";
 import ReplyIcon from "@mui/icons-material/Reply";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import CloseIcon from "@mui/icons-material/Close";
 import DeleteIcon from "@mui/icons-material/Delete";
-import axios from "axios";
+import EditIcon from "@mui/icons-material/Edit";
+import CheckIcon from "@mui/icons-material/Check";
+import { useComments } from "../../contexts/CommentContext"; // Import the useComments hook
+import { useUser } from "../../contexts/UserContext"; // Import the useUser hook
+import EditCommentSection from './EditCommentSection';
+import CommentSection from './CommentSection'; // Adjust the import path as needed
 
 /**
  * TaskComment component displays a list of comments and allows users to add new comments and replies.
@@ -31,31 +37,41 @@ import axios from "axios";
  * @returns {JSX.Element} The TaskComment component.
  */
 
-const TaskComment = memo(({ commentsData, taskId, addComment, deleteComment }) => { // Ensure addComment is received as a prop
+const TaskComment = memo(({ taskId }) => {
+  const { user } = useUser(); // Use the useUser hook
+  const {
+    comments,
+    fetchComments,
+    addComment,
+    updateComment,
+    deleteComment,
+    addReplyToComment,
+    loading,
+  } = useComments(); // Destructure the needed functions and states from useComments
   const [newComment, setNewComment] = useState("");
   const [replyContent, setReplyContent] = useState("");
   const [replyTo, setReplyTo] = useState(null);
   const [expandedComments, setExpandedComments] = useState(new Set());
-  //console.log(commentsData);
-  //console.log("In TaskComment, received addComment:", addComment);
+  const [editMode, setEditMode] = useState(false);
+  const [editingCommentId, setEditingCommentId] = useState(null);
+  const [editedContent, setEditedContent] = useState("");
 
+  useEffect(() => {
+    fetchComments(taskId);
+  }, [taskId]);
 
-  // useCallback ensures these functions are not recreated on every render
-  const handleCommentSubmit = () => {
-    addComment(newComment); // This now should trigger the snackbar
+  const handleCommentSubmit = useCallback(() => {
+    addComment(taskId, { content: newComment, author: user.username });
     setNewComment("");
-  };
+  }, [taskId, newComment, addComment]);
 
   const handleReplySubmit = useCallback(
     (commentId) => {
-      submitCommentReply(
-        { content: replyContent, parentComment: commentId },
-        taskId
-      );
+      addReplyToComment(taskId, commentId, { content: replyContent });
       setReplyContent("");
       setReplyTo(null);
     },
-    [replyContent, taskId]
+    [taskId, replyContent, addReplyToComment]
   );
 
   const toggleExpandComment = useCallback((commentId) => {
@@ -66,32 +82,18 @@ const TaskComment = memo(({ commentsData, taskId, addComment, deleteComment }) =
     });
   }, []);
 
-  const submitCommentReply = async (commentData, parentComment) => {
-    try {
-      const token = localStorage.getItem("token"); // Retrieve the token
-      const { content, parentComment } = commentData;
-      await axios.post(
-        `http://localhost:3000/tasks/${taskId}/comments/${parentComment}/replies`,
-        {
-          content,
-          parentComment,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      // If successful, fetch comments again or update local state
-    } catch (error) {
-      console.error("Error submitting comment:", error);
-      // Handle error (e.g., show error message)
-    }
-  };
+  const submitCommentReply = useCallback(
+    (commentId) => {
+      addReplyToComment(taskId, commentId, { content: replyContent });
+      setReplyContent("");
+      setReplyTo(null);
+    },
+    [taskId, replyContent, addReplyToComment]
+  );
 
   const renderReplies = (replies, level = 0) => {
     return replies.map((replyId) => {
-      const reply = commentsData.find((comment) => comment._id === replyId);
+      const reply = comments.find((comment) => comment._id === replyId);
       if (!reply) return null;
 
       return (
@@ -113,6 +115,34 @@ const TaskComment = memo(({ commentsData, taskId, addComment, deleteComment }) =
     const paddingLeft = level * 4;
     const isBeingRepliedTo = comment._id === replyTo;
     const hasReplies = comment.replies && comment.replies.length > 0;
+    const isEditable =
+      user._id === comment.author._id && comment.content !== "[deleted]";
+    const isEditing = editMode && editingCommentId === comment._id;
+
+    if (!isEditing) {
+      return (
+        <ListItem alignItems="flex-start" sx={{ py: 1, pl: paddingLeft }}>
+          <ListItemAvatar>
+            <Avatar alt={comment.author} />
+          </ListItemAvatar>
+          <Box sx={{ width: "100%", display: "flex", flexDirection: "column" }}>
+            <CommentSection
+              comment={comment}
+              onReply={() => setReplyTo(comment._id)}
+              onDelete={() => deleteComment(taskId, comment._id)}
+              onEdit={() => {
+                setEditMode(true);
+                setEditingCommentId(comment._id);
+                setEditedContent(comment.content);
+              }}
+              onToggleExpand={() => toggleExpandComment(comment._id)}
+              isExpanded={expandedComments.has(comment._id)}
+              isEditable={user._id === comment.author._id && comment.content !== "[deleted]"}
+            />
+          </Box>
+        </ListItem>
+      );
+    }
 
     return (
       <ListItem alignItems="flex-start" sx={{ py: 1, pl: paddingLeft }}>
@@ -120,66 +150,18 @@ const TaskComment = memo(({ commentsData, taskId, addComment, deleteComment }) =
           <Avatar alt={comment.author} />
         </ListItemAvatar>
         <Box sx={{ width: "100%", display: "flex", flexDirection: "column" }}>
-          <ListItemText
-            primary={comment.author.username}
-            secondary={
-              <>
-                {/* Comment text and metadata */}
-                {/* Reply input field */}
+        {isEditing && (
+    <EditCommentSection
+        editedContent={editedContent}
+        setEditedContent={setEditedContent}
+        onSave={() => {
+            updateComment(taskId, comment._id, editedContent);
+            setEditMode(false);
+        }}
+        onCancel={() => setEditMode(false)}
+    />
+)}
 
-                <Typography
-                  sx={{ display: "inline" }}
-                  component="span"
-                  variant="body2"
-                  color="text.primary"
-                >
-                  {comment.content}{" "}
-                  {/* Ensure the comment content is displayed */}
-                </Typography>
-                <Typography
-                  variant="caption"
-                  display="block"
-                  color="text.secondary"
-                  sx={{ mt: 1 }}
-                >
-                  {new Date(comment.createdAt).toLocaleString()}
-                </Typography>
-                
-                {/* Expand/Collapse icon */}
-                {hasReplies && (
-                  <IconButton
-                    size="small"
-                    onClick={() => toggleExpandComment(comment._id)}
-                    sx={{ marginLeft: "auto" }}
-                  >
-                    {expandedComments.has(comment._id) ? (
-                      <ExpandLessIcon />
-                    ) : (
-                      <ExpandMoreIcon />
-                    )}
-                  </IconButton>
-                )}
-                {!isBeingRepliedTo && (
-                  <IconButton
-                    size="small"
-                    onClick={() => setReplyTo(comment._id)}
-                    sx={{ ml: 0 }}
-                  >
-                    <ReplyIcon fontSize="small" />
-                  </IconButton>
-                )}
-                <IconButton
-          color="error"
-          onClick={() => deleteComment(comment._id)}
-          size="small"
-            sx={{ ml: 'auto', visibility: !isBeingRepliedTo ? 'visible' : 'hidden' }}
-        >
-          <DeleteIcon fontSize="small" />
-        </IconButton>
-              </>
-            }
-          />
-          
           {isBeingRepliedTo && (
             <>
               <TextField
@@ -213,14 +195,25 @@ const TaskComment = memo(({ commentsData, taskId, addComment, deleteComment }) =
               </Box>
             </>
           )}
-          
         </Box>
       </ListItem>
+
+      
     );
   };
 
   const renderComments = useCallback(() => {
-    return commentsData
+    if (loading) {
+      return Array.from(new Array(5)).map((_, index) => (
+        <Skeleton
+          key={index}
+          variant="rectangular"
+          height={118}
+          sx={{ my: 1 }}
+        />
+      ));
+    }
+    return comments
       .filter((comment) => !comment.parentComment)
       .map((comment) => (
         <React.Fragment key={comment._id}>
@@ -234,13 +227,13 @@ const TaskComment = memo(({ commentsData, taskId, addComment, deleteComment }) =
             )}
         </React.Fragment>
       ));
-  }, [commentsData, expandedComments, renderCommentItem, renderReplies]);
+  }, [comments, expandedComments, renderCommentItem, renderReplies]);
 
   return (
     <Box sx={{ width: "100%" }}>
       <List dense sx={{ maxHeight: "300px", overflowY: "auto" }}>
         {renderComments()}
-        {commentsData.length === 0 && (
+        {comments.length === 0 && (
           <Typography color="text.secondary" sx={{ mx: 2 }}>
             No comments yet.
           </Typography>

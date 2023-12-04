@@ -24,7 +24,15 @@ const taskCommentSchema = new mongoose.Schema({
       replies: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'TaskComment'
-      }]
+      }],
+      isDeleted: {
+        type: Boolean,
+        default: false
+      },
+      edited: {
+        type: Boolean,
+        default: false
+    }
 
 }, { timestamps: true });
 

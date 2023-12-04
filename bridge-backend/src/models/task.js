@@ -6,6 +6,26 @@ const checklistItemSchema = new Schema({
   isCompleted: { type: Boolean, default: false }
 });
 
+const historyLogSchema = new Schema({
+    date: {
+      type: Date,
+      default: Date.now
+    },
+    user: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+    },
+    action: {
+      type: String,
+      required: true
+    },
+    details: [{
+      field: String,
+      oldValue: Schema.Types.Mixed,
+      newValue: Schema.Types.Mixed
+    }]
+  });  
+
 const taskSchema = new Schema({
     project: {
         type: Schema.Types.ObjectId,
@@ -74,11 +94,7 @@ const taskSchema = new Schema({
         question: String,
         options: [{ text: String, votes: Number }],
     }],
-    history: [{
-        date: Date,
-        action: String,
-        description: String
-    }],
+    history: [historyLogSchema],
     requestToJoin: [{
         userId: {
             type: Schema.Types.ObjectId,
@@ -106,7 +122,12 @@ const taskSchema = new Schema({
     comments: [{
         type: Schema.Types.ObjectId,
         ref: 'Comment'
-    }]
+    }],
+    isArchived: {
+        type: Boolean,
+        default: false
+    }
+    
 }, { timestamps: true });
 
 const Task = mongoose.model('Task', taskSchema);

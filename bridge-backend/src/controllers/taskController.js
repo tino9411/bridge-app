@@ -7,7 +7,6 @@ const Phase = require("../models/phase");
 const Notification = require("../models/notification");
 
 
-// Function to search tasks based on various filters
 // Search for tasks based on filters
 exports.searchTasks = async (req, res) => {
     try {
@@ -101,7 +100,6 @@ exports.respondToJoinRequest = async (req, res) => {
   }
 };
 
-
 // View detailed task information
 exports.getTaskDetails = async (req, res) => {
     const { taskId } = req.params;
@@ -121,7 +119,6 @@ exports.getTaskDetails = async (req, res) => {
     }
   };
   
-
 // Leave feedback for a completed task
 exports.leaveFeedback = async (req, res) => {
     try {
@@ -146,21 +143,20 @@ exports.addTask = async (req, res) => {
     console.log("Received task data:", req.body);
     const { projectId } = req.params;
     const {
-        title,
-        description,
-        status,
-        priority,
-        phase,
-        skillsNeeded,
-        assignee,
-        dueDate,
-        rate,
-        files,
-        checklistItems,
-        tags,
-        polls
-      } = req.body;
-  
+      title,
+      description,
+      status,
+      priority,
+      phase,
+      skillsNeeded,
+      assignee,
+      dueDate,
+      rate,
+      files,
+      checklistItems,
+      tags,
+      polls
+    } = req.body;
 
     // Create a task object with only the provided fields
     const taskData = {
@@ -171,21 +167,22 @@ exports.addTask = async (req, res) => {
       priority,
       phase,
       skillsNeeded,
+      assignee: assignee || null, // Assign 'null' if not provided
       dueDate,
       rate,
       files,
       checklistItems,
       tags,
-      polls
+      polls,
+      history: [{ // Create an initial history log for task creation
+        date: new Date(),
+        action: "Task Created",
+        description: `Task '${title}' was created.`,
+      }]
     };
 
-    // Add assignee only if it's provided
-    if (assignee) {
-      taskData.assignee = assignee;
-    }
-
     const task = new Task(taskData);
-    await task.save();   
+    await task.save();
 
     // Add the task to the project's task list
     await Project.findByIdAndUpdate(projectId, { $push: { tasks: task._id } });
@@ -195,6 +192,7 @@ exports.addTask = async (req, res) => {
     res.status(400).json({ error: error.message });
   }
 };
+
 
 // Get all tasks for a project
 exports.getTasks = async (req, res) => {
@@ -221,19 +219,43 @@ exports.updateTask = async (req, res) => {
   try {
     const { taskId, projectId } = req.params;
     const taskUpdate = req.body;
+    const oldTask = await Task.findById(taskId);
 
-    // Update the task if it exists and belongs to the project
-    const task = await Task.findOneAndUpdate(
+    console.log("Updating task with data:", taskUpdate);
+
+    if (!oldTask) {
+      return res.status(404).json({ error: "Task not found" });
+    }
+
+    // Logic to capture changes between oldTask and taskUpdate
+    const changes = [];
+    Object.keys(taskUpdate).forEach(key => {
+      if (taskUpdate[key] !== oldTask[key]) {
+        changes.push({ field: key, oldValue: oldTask[key], newValue: taskUpdate[key] });
+      }
+    });
+
+    const updatedTask = await Task.findOneAndUpdate(
       { _id: taskId, project: projectId },
       taskUpdate,
       { new: true, runValidators: true }
     );
 
-    if (!task) {
+    if (!updatedTask) {
       return res.status(404).json({ error: "Task not found" });
     }
 
-    res.status(200).json(task);
+    // Add a history log to the task
+    const historyLog = {
+      date: new Date(),
+      action: "Task Updated",
+      details: changes
+    };
+
+    updatedTask.history.push(historyLog);
+    await updatedTask.save();
+
+    res.status(200).json(updatedTask);
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
@@ -276,7 +298,7 @@ exports.completeTask = async (req, res) => {
   }
 };
 
-// Delete a task within a project
+// Delete (archive) a task within a project
 exports.deleteTask = async (req, res) => {
   try {
     const { taskId, projectId } = req.params;
@@ -294,6 +316,19 @@ exports.deleteTask = async (req, res) => {
         .json({ message: "Task is currently assigned and cannot be deleted" });
     }
 
+    // Archive the task instead of deleting
+    task.isArchived = true;
+
+    // Add a history log entry for the task archiving
+    const historyLog = {
+      date: new Date(),
+      action: "Task Archived",
+      description: `Task '${task.title}' was archived.`
+    };
+    task.history.push(historyLog);
+
+    await task.save();
+
     // Remove task from the phase if it's assigned
     if (task.phase) {
       await Project.updateOne(
@@ -302,21 +337,15 @@ exports.deleteTask = async (req, res) => {
       );
     }
 
-    //Remove task from the project
-    await Project.deleteOne({ _id: projectId, tasks: taskId });
-
-
-    // Delete the task
-    await Task.findByIdAndDelete(taskId);
-
-    res.status(200).json({ message: "Task deleted successfully" });
+    res.status(200).json({ message: "Task archived successfully" });
   } catch (error) {
-    console.error("Error deleting task:", error);
+    console.error("Error archiving task:", error);
     res
       .status(500)
-      .json({ message: "An error occurred while deleting the task" });
+      .json({ message: "An error occurred while archiving the task" });
   }
 };
+
 
 exports.assignTask = async (req, res) => {
   const { taskId } = req.params;
@@ -394,7 +423,7 @@ exports.updateChecklistItems = async (req, res) => {
       res.status(500).json({ error: error.message });
     }
   };
-  
+
  // Add a history log to a task
 exports.addHistoryLog = async (req, res) => {
     const { taskId } = req.params;
