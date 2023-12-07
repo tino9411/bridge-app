@@ -10,7 +10,8 @@ import {
   Avatar,
   Box,
   Typography,
-  IconButton
+  IconButton,
+  Badge
 } from '@mui/material';
 import HomeIcon from '@mui/icons-material/Home';
 import DashboardIcon from '@mui/icons-material/Dashboard';
@@ -18,9 +19,13 @@ import AssignmentIcon from '@mui/icons-material/Assignment';
 import GroupIcon from '@mui/icons-material/Group';
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 import SearchIcon from '@mui/icons-material/Search';
+import NotificationsIcon from '@mui/icons-material/Notifications';
+import { useNotification } from '../contexts/NotificationContext'; // Import useNotification
 
 const Sidebar = ({ onLogout }) => {
   const navigate = useNavigate();
+  const { notifications } = useNotification();
+  const unreadCount = notifications.filter(n => !n.read).length; // Calculate unread notifications
 
   const handleLogout = () => {
     if (typeof onLogout === 'function') {
@@ -79,6 +84,15 @@ const Sidebar = ({ onLogout }) => {
         <ListItem button onClick={handleLogout}>
           <ListItemIcon><ExitToAppIcon /></ListItemIcon>
           <ListItemText primary="Logout" />
+        </ListItem>
+
+        <ListItem button component={Link} to="/notifications">
+          <ListItemIcon>
+            <Badge badgeContent={unreadCount} color="secondary">
+              <NotificationsIcon />
+            </Badge>
+          </ListItemIcon>
+          <ListItemText primary="Notifications" />
         </ListItem>
 
       </List>

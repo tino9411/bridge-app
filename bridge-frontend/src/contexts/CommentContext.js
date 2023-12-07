@@ -2,7 +2,7 @@
 import React, { createContext, useContext, useState } from 'react';
 import axios from 'axios';
 import useSnackbar from '../hooks/useSnackbar'; // Assuming you have a snackbar hook for notifications
-import { useUser } from './UserContext';
+import { useAuth } from '../hooks/useAuth'; // Assuming you have an auth hook for authentication
 
 const CommentContext = createContext();
 
@@ -10,7 +10,7 @@ export const useComments = () => useContext(CommentContext);
 
 export const CommentProvider = ({ children }) => {
 
-  const { token } = useUser(); // Assuming you have an auth hook for authentication
+  const { user, token } = useAuth(); // Assuming you have an auth hook for authentication
   const [comments, setComments] = useState([]);
   const [commentCount, setCommentCount] = useState()
   const [loading, setLoading] = useState(false);
@@ -179,6 +179,9 @@ export const CommentProvider = ({ children }) => {
   return (
     <CommentContext.Provider 
     value={{ 
+
+        user,
+        token,
         comments, 
         fetchComments, 
         addComment,

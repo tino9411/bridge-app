@@ -36,10 +36,10 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import Alert from "@mui/material/Alert";
 import { useTasks } from "../../contexts/TaskContext"; // Import the useTasks hook
 import EditRoundedIcon from '@mui/icons-material/EditRounded';
-import { useUser } from "../../contexts/UserContext";
 
 const TaskList = () => {
   const {
+    user,
     tasks,
     fetchProjectTasks,
     deleteTask,
@@ -62,7 +62,6 @@ const TaskList = () => {
   const [showEditModal, setShowEditModal] = useState(false); // State to manage EditTaskModal visibility
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedTaskId, setSelectedTaskId] = useState(null);
-  const { user } = useUser();
 
   // Handler for changing sort field
   const handleSortChange = (event) => {
@@ -216,7 +215,7 @@ const TaskList = () => {
   return (
     <Card
       sx={{
-        maxHeight: "450px",
+        maxHeight: "550px",
         width: "450px",
         display: "flex",
         flexDirection: "column",

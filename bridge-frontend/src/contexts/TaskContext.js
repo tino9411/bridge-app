@@ -9,7 +9,7 @@ const TaskContext = createContext();
 export const useTasks = () => useContext(TaskContext);
 
 export const TaskProvider = ({ children }) => {
-  const { token } = useAuth(); // Assuming you have an auth hook for authentication
+  const { token, user } = useAuth(); // Assuming you have an auth hook for authentication
   const [tasks, setTasks] = useState([]);
   const [assignedTasks, setAssignedTasks] = useState([]);
   // useSnackbar hook for displaying notifications
@@ -141,74 +141,34 @@ export const TaskProvider = ({ children }) => {
     }
   };
 
-  const requestToJoinTask = async (taskId, userId, message) => {
+  const requestToJoinTask = async (taskId, message) => {
+  
     try {
       await axios.post(
         `http://localhost:3000/projects/tasks/${taskId}/request-to-join`,
         {
-          userId,
+          userId: user._id, // Ensure that you are sending the user's ID
           message,
         },
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      // Handle successful request (e.g., show a notification or update UI)
+      // Handle successful request
       showSnackbar("Request sent successfully", "success");
     } catch (error) {
       console.error("Error requesting to join task", error);
-        // Handle error
-        showSnackbar("Error requesting to join task", "error");
+      showSnackbar("Error requesting to join task", "error");
     }
   };
-
-  const updateChecklistItems = async (taskId, checklistItems) => {
-    try {
-      await axios.patch(
-        `http://localhost:3000/projects/tasks/${taskId}/update-checklist`,
-        { checklistItems },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      // Handle success (e.g., update local state or show notification)
-    } catch (error) {
-      console.error("Error updating checklist items", error);
-      showSnackbar("Error updating checklist items", "error");
-    }
-  };
-
-  const addPollToTask = async (taskId, poll) => {
-    try {
-      await axios.post(
-        `http://localhost:3000/projects/tasks/${taskId}/add-poll`,
-        { poll },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      // Handle success
-    } catch (error) {
-      console.error("Error adding poll to task", error);
-      showSnackbar("Error adding poll to task", "error");
-    }
-  };
-
-  const addHistoryLogToTask = async (taskId, log) => {
-    try {
-      await axios.post(
-        `http://localhost:3000/projects/tasks/${taskId}/history`,
-        { log },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      // Handle success
-    } catch (error) {
-      console.error("Error adding history log", error);
-        showSnackbar("Error adding history log", "error");
-    }
-  };
+  
 
   // Add other task-related methods as needed (e.g., createTask, updateTask, deleteTask)
 
   return (
     <TaskContext.Provider
       value={{
+        user,
         tasks,
         assignedTasks,
         fetchProjectTasks,
@@ -219,9 +179,8 @@ export const TaskProvider = ({ children }) => {
         completeTask,
         searchTasks,
         requestToJoinTask,
-        updateChecklistItems,
-        addPollToTask,
-        addHistoryLogToTask,
+      
+
 
         //Snackbar props
         snackbarOpen,

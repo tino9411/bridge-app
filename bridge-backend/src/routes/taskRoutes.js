@@ -7,13 +7,11 @@ const {
   leaveFeedback,
   addTask,
   getTasks,
+  getTaskDetails,
   updateTask,
   deleteTask,
   assignTask,
   completeTask,
-  updateChecklistItems,
-  addPollToTask,
-  addHistoryLog,
 
 } = require('../controllers/taskController');
 const authMiddleware = require('../middlewares/auth');
@@ -23,13 +21,12 @@ const {
 } = require('../controllers/fileController');
 const router = express.Router();
 
+
+router.get('/:projectId/tasks/:taskId', authMiddleware, getTaskDetails);
 router.get('/tasks/search', authMiddleware, searchTasks);
 router.post('/tasks/:taskId/request-to-join', authMiddleware, requestToJoinTask);
 router.post('/tasks/:taskId/respond-to-join-request', authMiddleware, checkProjectManagerRole, respondToJoinRequest); // Added checkProjectManagerRole here as well
 router.post('/tasks/:taskId/leave-feedback', authMiddleware, leaveFeedback);
-router.patch('/tasks/:taskId/update-checklist', authMiddleware, updateChecklistItems);
-router.post('/tasks/:taskId/history', addHistoryLog);
-router.post('/tasks/:taskId/add-poll', authMiddleware, addPollToTask);
 router.post('/:projectId/tasks', authMiddleware, checkProjectManagerRole, addTask);
 router.post('/:projectId/tasks/:taskId/assign', authMiddleware, checkProjectManagerRole, assignTask); // Added checkProjectManagerRole here as well
 router.get('/:projectId/tasks', authMiddleware, getTasks);

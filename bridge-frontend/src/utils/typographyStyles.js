@@ -2,9 +2,6 @@ const typographyStyles = {
     boldTitle: {
       fontWeight: 'bold',
     },
-    marginBottom: {
-      marginBottom: '1rem',
-    },
     projectDescription: {
         fontSize: 14,
         display: 'flex', 
@@ -17,26 +14,23 @@ const typographyStyles = {
         display: 'flex', 
         flexDirection: 'row', 
         justifyContent: 'space-between',
+        mb: 0,
         },
     projectTitle: {
-        fontSize: 16,
+        fontSize: 14,
         },
     projectStatusPriority: {
             fontSize: 10,
             display: 'flex', 
             flexDirection: 'column', 
             justifyContent: 'space-between',
+            mb: 0,
+            p: 0
             
             },
-    projectDate: {
-        fontSize: 14,
-        display: 'flex', 
-        flexDirection: 'row', 
-        justifyContent: 'space-between', 
-        alignItems: 'center',
-        },
+
     projectBudget: {
-        fontSize: 14,
+        fontSize: 12,
         display: 'flex', 
         flexDirection: 'row', 
         justifyContent: 'space-between', 
@@ -49,20 +43,7 @@ const typographyStyles = {
         justifyContent: 'space-between', 
         mb: 2 
         },
-    projectStatus: {
-        fontSize: 14,
-        display: 'flex', 
-        flexDirection: 'row',
-        alignItems: 'center',
-        mb: 3 
-        },
-    projectPriority: {
-        fontSize: 14,
-        display: 'flex', 
-        flexDirection: 'row', 
-        alignItems: 'center',
-        mb: 3
-        },
+  
 
     // Add other customizations here
     

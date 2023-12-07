@@ -11,13 +11,15 @@ import Layout from './components/Layout';
 import Project from './components/project/Project';
 import TaskList from './components/task/TaskList';
 import ProjectList from './components/project/ProjectList';
-import { AuthProvider } from './hooks/useAuth';
+import Notification from './components/notification/Notification';
 import { ProjectProvider } from './contexts/ProjectContext';
-import { UserProvider } from './contexts/UserContext';
 import { TeamProvider } from './contexts/TeamContext';
 import { TaskProvider } from './contexts/TaskContext';
 import { CommentProvider } from './contexts/CommentContext';
 import TaskSearch from './components/task/TaskSearch';
+import { SocketProvider } from './contexts/SocketContext';
+import { NotificationProvider } from './contexts/NotificationContext';
+
 
 const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -45,8 +47,11 @@ const App = () => {
   };
 
   return (
+    <SocketProvider>
+  
     <ThemeProvider theme={theme}>
-    <UserProvider>
+
+    <NotificationProvider>
     <ProjectProvider>
     <TeamProvider>
     <TaskProvider>
@@ -86,6 +91,12 @@ const App = () => {
           <Layout isAuthenticated={isAuthenticated} onLogout={handleLogout}>
             <TaskSearch />
           </Layout>
+        } 
+        />
+        <Route path="/notifications" element={
+          <Layout isAuthenticated={isAuthenticated} onLogout={handleLogout}>
+            <Notification />
+          </Layout>
         } />
 
         {/* Add more routes as needed */}
@@ -95,8 +106,10 @@ const App = () => {
     </TaskProvider>
     </TeamProvider>
     </ProjectProvider>
-    </UserProvider>
+     </NotificationProvider>
     </ThemeProvider>
+   
+    </SocketProvider>
   );
 };
 

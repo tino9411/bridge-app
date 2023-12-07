@@ -90,10 +90,6 @@ const taskSchema = new Schema({
         type: String,
         trim: true
     }],
-    polls: [{
-        question: String,
-        options: [{ text: String, votes: Number }],
-    }],
     history: [historyLogSchema],
     requestToJoin: [{
         userId: {

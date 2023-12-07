@@ -22,7 +22,7 @@ const notificationSchema = new Schema({
     type: {
         type: String,
         required: true,
-        enum: ['task', 'milestone', 'project']
+        enum: ['task', 'milestone', 'project', 'phase', 'comment', 'team', 'user', 'request', 'message']
     },
     relatedTo: {
         type: Schema.Types.ObjectId,
@@ -43,3 +43,6 @@ const notificationSchema = new Schema({
 
 
     }, { timestamps: true });
+
+    const Notification = mongoose.model('Notification', notificationSchema);
+    module.exports = Notification;

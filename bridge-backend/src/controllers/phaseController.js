@@ -53,7 +53,6 @@ exports.getPhases = async (req, res) => {
     }
   };
   
-
 // Get a single phase with detailed information
 exports.getPhase = async (req, res) => {
     try {
@@ -101,7 +100,6 @@ exports.getPhase = async (req, res) => {
     }
   };
   
-
 // Add a new phase with validation
 exports.addPhase = async (req, res) => {
   const session = await mongoose.startSession();
@@ -237,69 +235,72 @@ exports.deletePhase = async (req, res) => {
   }
 };
 
-
-
 // Assign a task to a phase
 exports.assignTaskToPhase = async (req, res) => {
   const session = await mongoose.startSession();
   session.startTransaction();
   try {
-      const { phaseId, taskId } = req.params;
+    const { phaseId, taskId } = req.params;
 
-      // Find the phase by its ID
-      const phase = await Phase.findById(phaseId);
-      if (!phase) {
-          return res.status(404).json({ success: false, error: "Phase not found" });
-      }
+    // Find the phase by its ID
+    const phase = await Phase.findById(phaseId);
+    if (!phase) {
+      return res.status(404).json({ success: false, error: "Phase not found" });
+    }
 
-      // Find the task by its ID
-      const task = await Task.findById(taskId);
-      if (!task) {
-          return res.status(404).json({ success: false, error: "Task not found" });
-      }
+    // Find the task by its ID
+    const task = await Task.findById(taskId);
+    if (!task) {
+      return res.status(404).json({ success: false, error: "Task not found" });
+    }
 
-      // Check if the task is already assigned to a phase
-      if (task.phase) {
-          return res
-              .status(409)
-              .json({ success: false, error: "Task is already assigned to a phase" });
-      }
+    // Update the task with the phase ID and add history log
+    let historyLog = {
+      date: new Date(),
+      action: "Task Updated",
+      user: req.user._id,
+      details: []
+    };
 
-      // Update the task with the phase ID and add history log
-      task.phase = phaseId;
-     // Only add to history if the phase is being removed
-    if (task.phase && task.phase.toString() === phaseId) {
-      task.history.push({
-        date: new Date(),
-        action: "Task Removed from Phase",
-        user: req.user._id,
-        details: [{
-          field: "phase",
-          oldValue: phase._id,
-          newValue: null,
-          description: `Task removed from phase '${phase.name}'.`
-        }]
+    if (task.phase && task.phase.toString() !== phaseId) {
+      // If task is already assigned to a different phase, update history log
+      historyLog.details.push({
+        field: "phase",
+        oldValue: task.phase,
+        newValue: phaseId,
+        description: `Task moved from phase '${task.phase}' to '${phase.name}'.`
+      });
+    } else if (!task.phase) {
+      // If task is not assigned to any phase
+      historyLog.details.push({
+        field: "phase",
+        oldValue: null,
+        newValue: phaseId,
+        description: `Task assigned to phase '${phase.name}'.`
       });
     }
-      // Save the task within the transaction
-      await task.save({ session });
 
-      // Check if the task is already assigned to the phase to avoid duplication
-      if (!phase.assignedTasks.includes(taskId)) {
-          phase.assignedTasks.push(taskId);
-          await phase.save({ session });
-      }
+    task.phase = phaseId;
+    task.history.push(historyLog);
 
-      await session.commitTransaction();
-      res.status(200).json({ success: true, phase, task });
+    // Save the task within the transaction
+    await task.save({ session });
+
+    // Check if the task is already assigned to the phase to avoid duplication
+    if (!phase.assignedTasks.includes(taskId)) {
+      phase.assignedTasks.push(taskId);
+      await phase.save({ session });
+    }
+
+    await session.commitTransaction();
+    res.status(200).json({ success: true, phase, task });
   } catch (error) {
-      await session.abortTransaction();
-      res.status(500).json({ success: false, error: error.message });
+    await session.abortTransaction();
+    res.status(500).json({ success: false, error: error.message });
   } finally {
-      session.endSession();
+    session.endSession();
   }
 };
-
 
 // Remove a task from a phase
 exports.removeTaskFromPhase = async (req, res) => {
@@ -325,7 +326,8 @@ exports.removeTaskFromPhase = async (req, res) => {
     phase.assignedTasks = phase.assignedTasks.filter(id => id.toString() !== taskId);
     await phase.save({ session });
 
-    // Add a history log to the task
+    // Update the task to remove the phase reference and add a history log
+    task.phase = null; // Remove phase reference from task
     task.history.push({
       date: new Date(),
       action: "Task Removed from Phase",
@@ -342,7 +344,7 @@ exports.removeTaskFromPhase = async (req, res) => {
     await task.save({ session });
 
     await session.commitTransaction();
-    res.status(200).json({ success: true, phase });
+    res.status(200).json({ success: true, message: "Task successfully removed from phase" });
   } catch (error) {
     await session.abortTransaction();
     res.status(500).json({ success: false, error: error.message });
@@ -350,5 +352,6 @@ exports.removeTaskFromPhase = async (req, res) => {
     session.endSession();
   }
 };
+
 
 

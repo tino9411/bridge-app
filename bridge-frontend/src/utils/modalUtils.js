@@ -15,7 +15,8 @@ export const StyledModal = ({ open, onClose, children, ...props }) => (
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
-      p: 1,
+  
+    
     }}
     {...props}
   >

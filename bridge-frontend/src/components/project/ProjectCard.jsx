@@ -68,7 +68,6 @@ const ProjectCard = ({ project, onDelete, openEditModal }) => {
 
     // Delete logic here
     try {
-      await axios.delete(`http://localhost:3000/projects/${project._id}`);
       onDelete(project._id);
     } catch (error) {
       console.error("Error deleting the project:", error);

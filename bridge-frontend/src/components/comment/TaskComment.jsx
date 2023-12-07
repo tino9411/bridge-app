@@ -16,15 +16,8 @@ import {
 } from "@mui/material";
 import { Skeleton } from "@mui/material";
 import SendIcon from "@mui/icons-material/Send";
-import ReplyIcon from "@mui/icons-material/Reply";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import CloseIcon from "@mui/icons-material/Close";
-import DeleteIcon from "@mui/icons-material/Delete";
-import EditIcon from "@mui/icons-material/Edit";
-import CheckIcon from "@mui/icons-material/Check";
 import { useComments } from "../../contexts/CommentContext"; // Import the useComments hook
-import { useUser } from "../../contexts/UserContext"; // Import the useUser hook
 import EditCommentSection from './EditCommentSection';
 import CommentSection from './CommentSection'; // Adjust the import path as needed
 
@@ -38,8 +31,8 @@ import CommentSection from './CommentSection'; // Adjust the import path as need
  */
 
 const TaskComment = memo(({ taskId }) => {
-  const { user } = useUser(); // Use the useUser hook
   const {
+    user,
     comments,
     fetchComments,
     addComment,

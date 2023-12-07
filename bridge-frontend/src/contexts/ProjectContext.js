@@ -1,6 +1,7 @@
 // contexts/ProjectContext.js
 import { createContext, useContext, useState } from 'react';
 import useSnackbar from '../hooks/useSnackbar'; // Import the useSnackbar hook
+import { useAuth } from '../hooks/useAuth'; // Assuming you have an auth hook for authentication
 
 import axios from 'axios';
 
@@ -10,9 +11,10 @@ export const useProjects = () => useContext(ProjectContext);
 
 export const ProjectProvider = ({ children }) => {
   const [projects, setProjects] = useState([]);
+  const { token, user } = useAuth(); // Assuming you have an auth hook for authentication
   const { snackbarOpen, snackbarMessage, snackbarSeverity, showSnackbar, handleSnackbarClose } = useSnackbar(); // Use the useSnackbar hook
   
-  const fetchProjects = async (token) => {
+  const fetchProjects = async () => {
     try {
       const response = await axios.get('http://localhost:3000/projects', {
         headers: { Authorization: `Bearer ${token}` },
@@ -24,7 +26,7 @@ export const ProjectProvider = ({ children }) => {
     }
   };
 
-  const deleteProject = async (projectId, token) => {
+  const deleteProject = async (projectId) => {
     try {
       await axios.delete(`http://localhost:3000/projects/${projectId}`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -37,7 +39,7 @@ export const ProjectProvider = ({ children }) => {
     }
   };
 
-  const addProject = async (projectData, token) => {
+  const addProject = async (projectData) => {
     try {
       const response = await axios.post(
         'http://localhost:3000/projects',
@@ -54,7 +56,7 @@ export const ProjectProvider = ({ children }) => {
     }
   }
 
-  const updateProject = async (projectId, projectData, token) => {
+  const updateProject = async (projectId, projectData) => {
     try {
       const response = await axios.patch(
         `http://localhost:3000/projects/${projectId}`,

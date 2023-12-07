@@ -60,31 +60,31 @@ const Project = () => {
         </Typography>
        
         </Box>
-        <Box sx={{ }}>
-        <Typography variant="subtitle1" sx={typographyStyles.projectDates}>
-        <Typography variant="body1"
-        sx={typographyStyles.projectDate}><strong>Start Date: </strong> {formatDate(project?.startDate)}
+        <Box>
+       
+        <Typography variant="body1"><strong>Start Date: </strong> {formatDate(project?.startDate)}
         </Typography>
         <Typography variant="body1"
         sx={typographyStyles.projectDate}><strong>End Date: </strong> {formatDate(project?.endDate)}
         </Typography>
-        </Typography>
-        ,</Box>
-        <Box>
-        <Typography variant="body1"  sx={ typographyStyles.projectStatusPriority}>
         <Typography variant="body1"
         sx={typographyStyles.projectStatus}>
           <strong>Status:</strong>
-          <Chip label={project?.status} sx={{ bgcolor: theme.palette.statusProject[project?.status.toLowerCase()], color: 'common.white', ml: 1, size: "medium" }} />
+          <Chip size="small" label={project?.status} sx={{ bgcolor: theme.palette.statusProject[project?.status.toLowerCase()], color: 'common.white', ml: 1, }} />
         </Typography>
         <Typography variant="body1"
         sx={typographyStyles.projectPriority}>
           <strong>Priority:</strong>
-          <Chip label={project?.priority} sx={{ bgcolor: theme.palette.priority[project?.priority.toLowerCase()], color: 'common.white', ml: 1, size: "medium" }} />
+          <Chip size="small" label={project?.priority} sx={{ bgcolor: theme.palette.priority[project?.priority.toLowerCase()], color: 'common.white', ml: 1, }} />
+          <Typography variant="body1"><strong>Budget:</strong> ${project?.budget.toLocaleString()}</Typography>
         </Typography>
-        </Typography>
+        ,</Box>
+        <Box>
+       
+        
+       
         </Box>
-        <Typography variant="body1"><strong>Budget:</strong> ${project?.budget.toLocaleString()}</Typography>
+        
       </Paper>
 
       <Box sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', overflowY: 'auto', p: 2}}>

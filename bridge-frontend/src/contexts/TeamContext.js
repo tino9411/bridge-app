@@ -1,14 +1,16 @@
 // contexts/TeamContext.js
 import React, { createContext, useContext, useState, useEffect } from "react";
 import axios from "axios";
+import { useAuth } from "../hooks/useAuth";
 
 const TeamContext = createContext();
 
 export const useTeam = () => useContext(TeamContext);
 
 export const TeamProvider = ({ children }) => {
+  const { token } = useAuth();
   const [team, setTeam] = useState([]);
-  const token = localStorage.getItem("token");
+
 
   const fetchTeam = async (projectId) => {
     if (token && projectId) {

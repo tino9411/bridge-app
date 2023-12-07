@@ -12,14 +12,12 @@ import CreateProjectModal from "./project/CreateProjectModal"; // Import the Cre
 import EditProjectModal from "./project/EditProjectModal"; // Import the EditProjectModal component
 import { useAuth } from "../hooks/useAuth"; // Import useAuth hook
 import { useProjects } from "../contexts/ProjectContext";
-import { useUser } from "../contexts/UserContext"; // Import useUser
 import { useTeam } from "../contexts/TeamContext";
 import { useTasks } from '../contexts/TaskContext';
 
 const Dashboard = ({ onLogout }) => {
   const [selectedProjectId, setSelectedProjectId] = useState(null);
-  const { user } = useUser(); // Use the useUser hook
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const { 
     projects, 
     fetchProjects, 
@@ -52,9 +50,9 @@ const Dashboard = ({ onLogout }) => {
   // Function to handle new project submission
   const handleCreateProject = async (projectData) => {
     try {
-      await addProject(projectData, token); // Add project using the context function
+      await addProject(projectData); // Add project using the context function
       closeCreateModal();
-      fetchProjects(token); // Fetch updated projects list
+      fetchProjects(); // Fetch updated projects list
     } catch (error) {
       console.error("Error creating project", error);
     }
@@ -84,11 +82,20 @@ const Dashboard = ({ onLogout }) => {
     }
   };
 
+  const handleDeleteProject = async (projectId) => {
+    try {
+      await deleteProject(projectId);
+      fetchProjects(); // Fetch updated projects list
+    } catch (error) {
+      console.error("Error deleting project", error);
+    }
+  }
+
   useEffect(() => {
     if (token) {
-      fetchProjects(token);
+      fetchProjects();
     }
-  }, [token]);
+  }, []);
 
   useEffect(() => {
     if (selectedProjectId) {
@@ -121,7 +128,6 @@ const Dashboard = ({ onLogout }) => {
 
         <Grid container spacing={2} justifyContent="center"
         sx={{
-          border: "1px solid #ccc",
           height: "auto",
           display: "flex",
           minWidth: "300px",
@@ -149,7 +155,7 @@ const Dashboard = ({ onLogout }) => {
                   <Grid item key={project._id} xs={12} sm={12} md={4} lg={3}>
                     <ProjectCard
                       project={project}
-                      onDelete={() => deleteProject(project._id)}
+                      onDelete={() => handleDeleteProject(project._id)}
                       openEditModal={openEditModal}
                     />
                   </Grid>

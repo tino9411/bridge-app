@@ -9,19 +9,9 @@ import {
   Box,
   Card,
 } from "@mui/material";
-import Timeline from "@mui/lab/Timeline";
-import TimelineItem from "@mui/lab/TimelineItem";
-import TimelineSeparator from "@mui/lab/TimelineSeparator";
-import TimelineDot from "@mui/lab/TimelineDot";
-import TimelineConnector from "@mui/lab/TimelineConnector";
-import TimelineContent from "@mui/lab/TimelineContent";
+
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
-/* import LaptopMacIcon from "@mui/icons-material/LaptopMac";
-import FastfoodIcon from "@mui/icons-material/Fastfood";
-import HotelIcon from "@mui/icons-material/Hotel";
-import RepeatIcon from "@mui/icons-material/Repeat"; */
-import TimelineOppositeContent from "@mui/lab/TimelineOppositeContent";
 import { conditionalRender } from "../../utils/renderUtils";
 import CloseIcon from "@mui/icons-material/Close";
 import TaskComment from "../comment/TaskComment";
@@ -33,6 +23,8 @@ import { renderSkillsAsChips } from "../../utils/chipUtils";
 import { useTheme } from "@mui/material/styles";
 import { useComments } from "../../contexts/CommentContext";
 import Snackbar from "@mui/material/Snackbar";
+import TaskHistory from "./TaskHistory";
+
 const TaskModal = ({ task, onClose, token }) => {
   const {
     snackbarOpen,
@@ -48,67 +40,8 @@ const TaskModal = ({ task, onClose, token }) => {
     setShowTaskActivity(!showTaskActivity);
   };
 
-  const renderTaskHistory = () => {
-    const importantFields = ['status', 'dueDate', 'rate', 'phase']; // Focus on these fields
-  
-    const formatDetail = (value) => {
-      if (value instanceof Date || (typeof value === 'string' && Date.parse(value))) {
-        return new Date(value).toLocaleDateString(); // Format date strings and Date objects
-      }
-      if (value && typeof value === 'object') {
-        if (value.username) return value.username; // For User objects
-        if (value.name) return value.name; // For other objects with 'name' field
-        return JSON.stringify(value); // Fallback for other object types
-      }
-      return value; // Return primitive types as-is
-    };
-  
-    const actionColors = {
-      "Task Updated": "secondary",
-      "Task Assigned to Phase": "primary",
-      "Task Removed from Phase": "error",
-      // Add other actions and their colors as needed
-    };
-  
-    return (
-      <Timeline position="alternate">
-        {task.history.slice().reverse().map((log, index) => (
-          <TimelineItem key={index}>
-            <TimelineOppositeContent
-              sx={{ m: 'auto 0' }}
-              align="right"
-              variant="body2"
-              color="text.secondary"
-            >
-              {new Date(log.date).toLocaleString()} {/* Format date for display */}
-            </TimelineOppositeContent>
-            <TimelineSeparator>
-              <TimelineConnector />
-              <TimelineDot color={actionColors[log.action] || "grey"} variant="outlined" />
-              <TimelineConnector />
-            </TimelineSeparator>
-            <TimelineContent sx={{ py: '12px', px: 2 }}>
-              <Typography variant="h6" >{log.action}</Typography>
-              <Typography variant="body2" color="text.secondary" style={{ fontSize: '0.8rem' }}>{log.description}</Typography>
-              {log.details && log.details
-                .filter(detail => importantFields.includes(detail.field) && formatDetail(detail.oldValue) !== formatDetail(detail.newValue))
-                .map((detail, detailIndex) => (
-                  <Typography key={detailIndex} variant="body2" style={{ fontSize: '0.75rem', color: 'gray' }}>
-                    {detail.field}: Changed from "{formatDetail(detail.oldValue)}" to "{formatDetail(detail.newValue)}"
-                  </Typography>
-                ))
-              }
-            </TimelineContent>
-          </TimelineItem>
-        ))}
-      </Timeline>
-    );
-  };
-  
-  
-  
-  
 
+  
   const renderTaskPhase = () => {
     if (task.phase) {
       return (
@@ -128,7 +61,7 @@ const TaskModal = ({ task, onClose, token }) => {
         sx={{
           display: "flex",
           flexDirection: "row",
-          width: showTaskActivity ? "1100px" : "1000px",
+          width: showTaskActivity ? "1100px" : "600px",
         }}
       >
         <StyledCard
@@ -155,7 +88,7 @@ const TaskModal = ({ task, onClose, token }) => {
             <Box>
               <IconButton
                 onClick={toggleTaskActivity}
-                sx={{ display: "flex", marginLeft: "auto", p: 1 }}
+                sx={{ display: "flex", marginLeft: "auto", p: 1, top: -20, right: -10 }}
               >
                 {showTaskActivity ? (
                   <ArrowBackIosIcon />
@@ -170,10 +103,11 @@ const TaskModal = ({ task, onClose, token }) => {
                 variant="body2"
                 component="div"
                 sx={{
-                  mb: 1,
+                  mb: 0,
                   display: "flex",
                   flexDirection: "row",
                   justifyContent: "space-between",
+                  alignItems: "center",
                 }}
               >
                 <Typography variant="body2" component="div" sx={{ mb: 1 }}>
@@ -206,8 +140,8 @@ const TaskModal = ({ task, onClose, token }) => {
                 sx={{
                   mb: 1,
                   display: "flex",
-                  flexDirection: "row",
-                  justifyContent: "space-between",
+                  flexDirection: "column",
+                  justifyContent: "flex-start",
                 }}
               >
                 <strong>
@@ -265,18 +199,18 @@ const TaskModal = ({ task, onClose, token }) => {
         {showTaskActivity && (
           <Card
             sx={{
-              width: "100%",
+              width: "80%",
               overflowY: "auto",
               bgcolor: "background.paper",
               padding: 2,
-              maxHeight: "calc(100vh - 205px)",
+              maxHeight: "calc(100vh)",
               boxSizing: "border-box",
             }}
           >
             <Typography variant="h6" sx={{ mb: 2, textAlign: "center" }}>
               Task Activity
             </Typography>
-            {renderTaskHistory()}
+            <TaskHistory task={task} /> {/* Use TaskHistory component */}
           </Card>
         )}
       </Box>
