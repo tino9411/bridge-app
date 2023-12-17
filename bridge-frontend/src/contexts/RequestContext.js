@@ -19,21 +19,27 @@ export const RequestProvider = ({ children }) => {
   } = useSnackbar(); // Use the useSnackbar hook
 
   // Function to create a join request
-  const createJoinRequest = async (taskId, message) => {
-    try {
-      const response = await axios.post(
-        `http://localhost:3000/requests`,
-        { taskId, message },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setRequests([...requests, response.data]);
-      showSnackbar("Join request sent successfully", "success");
-    } catch (error) {
-      console.error("Error sending join request", error);
-      showSnackbar("Error sending join request", "error");
-    }
-  };
-  
+const createJoinRequest = async (taskId, projectId, message) => {
+  try {
+    const response = await axios.post(
+      `http://localhost:3000/requests`,
+      {
+        user: user._id, // Assuming 'user' is the currently logged-in user
+        task: taskId,
+        project: projectId,
+        message: message
+      },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    setRequests([...requests, response.data]);
+    showSnackbar("Join request sent successfully", "success");
+  } catch (error) {
+    console.error("Error sending join request", error);
+    showSnackbar("Error sending join request", "error");
+  }
+};
+
+
 // Function to fetch join requests for a user
 const fetchUserRequests = async () => {
   if (!user || !token) {
@@ -89,6 +95,7 @@ const fetchUserRequests = async () => {
         fetchUserRequests,
         updateRequestStatus,
         // Provide the snackbar states and functions
+        showSnackbar,
         snackbarOpen,
         snackbarMessage,
         snackbarSeverity,

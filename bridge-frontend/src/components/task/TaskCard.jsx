@@ -25,11 +25,18 @@ import FormControlLabel from "@mui/material/FormControlLabel";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import Collapse from "@mui/material/Collapse";
 import IconButton from "@mui/material/IconButton";
-
+import { useRequests } from '../../contexts/RequestContext'
 import { formatDate } from "../../utils/dateUtils"; // Adjust the path as necessary
+import { useAuth } from "../../hooks/useAuth";
 
 const TaskCard = ({ task }) => {
-  const { requestToJoinTask, updateChecklistItems } = useTasks();
+  const { updateChecklistItems } = useTasks();
+  const { 
+    createJoinRequest,
+    requests,
+    showSnackbar,
+  } = useRequests();
+  const { user } = useAuth();
   const [openDialog, setOpenDialog] = useState(false);
   const [joinMessage, setJoinMessage] = useState("");
   const [expanded, setExpanded] = useState(false);
@@ -45,13 +52,34 @@ const TaskCard = ({ task }) => {
   };
 
   const handleRequestJoin = () => {
-    requestToJoinTask(task._id, joinMessage);
+    createJoinRequest(task._id, task.projectId, joinMessage)
+      .then(() => {
+        showSnackbar("Join request sent successfully!", "success");
+      })
+      .catch(() => {
+        showSnackbar("Failed to send join request.", "error");
+      });
     setOpenDialog(false);
   };
 
-  const handleOpenDialog = () => {
-    setOpenDialog(true);
+  const hasPendingRequest = () => {
+    return requests.some(request =>
+      request.task.id === task._id && // Check if the task ID matches
+      request.user._id === user._id && // Check if the user ID matches
+      request.status === 'pending' // Check if the status is 'pending'
+    );
   };
+  
+  
+
+  const handleOpenDialog = () => {
+    if (!hasPendingRequest()) {
+      setOpenDialog(true);
+    }
+  };
+  
+  // You can also use this condition to disable the button, as shown in the above step.
+  
 
   const handleCloseDialog = () => {
     setOpenDialog(false);
@@ -153,12 +181,13 @@ const TaskCard = ({ task }) => {
           <ExpandMoreIcon />
         </IconButton>
         <Button
-          variant="outlined"
-          startIcon={<GroupAddIcon />}
-          onClick={handleOpenDialog}
-        >
-          Request to Join
-        </Button>
+        variant="outlined"
+        startIcon={<GroupAddIcon />}
+        onClick={handleOpenDialog}
+        disabled={hasPendingRequest()}
+      >
+        {hasPendingRequest() ? "Pending" : "Request to Join"}
+      </Button>
       </CardActions>
       <Collapse in={expanded} timeout="auto" unmountOnExit>
         <CardContent>
