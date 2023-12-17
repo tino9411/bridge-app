@@ -92,6 +92,10 @@ const userSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Task'
   }],
+  rating: {
+    type: Number,
+    default: 0
+  }
   // Add additional user fields as needed here
 });
 

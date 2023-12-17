@@ -11,7 +11,7 @@ exports.createRequest = async (req, res) => {
 
     // Populate the task and project details
     const populatedRequest = await Request.findById(newRequest._id)
-      .populate("task", "title project") // Only populate title and project fields of the task
+      .populate("task", "title project status priority") // Only populate title and project fields of the task
       .populate({
         path: "task",
         populate: { path: "project", select: "projectManager" }, // Only populate projectManager field of the project
@@ -141,11 +141,11 @@ exports.getUserRequests = async (req, res) => {
           populate: [
             { 
               path: "user", 
-              select: "username" // Populate user details in request
+              select: "username firstName lastName email skills biography profileImage" // Add more fields as needed
             },
             {
               path: "task",
-              select: "title description" // Populate necessary task details
+              select: "title description status priority skillsNeeded" // Populate necessary task details
             }
           ]
         });
