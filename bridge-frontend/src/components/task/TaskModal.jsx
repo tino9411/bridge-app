@@ -62,6 +62,7 @@ const TaskModal = ({ task, onClose, token }) => {
           display: "flex",
           flexDirection: "row",
           width: showTaskActivity ? "1100px" : "600px",
+          maxHeight: "calc(100vh - 100px)",
         }}
       >
         <StyledCard

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import {
   Drawer,
@@ -20,12 +20,16 @@ import GroupIcon from '@mui/icons-material/Group';
 import ExitToAppIcon from '@mui/icons-material/ExitToApp';
 import SearchIcon from '@mui/icons-material/Search';
 import NotificationsIcon from '@mui/icons-material/Notifications';
+import RequestIcon from '@mui/icons-material/FormatListBulleted'; // Icon for requests
 import { useNotification } from '../contexts/NotificationContext'; // Import useNotification
+import { useRequests } from '../contexts/RequestContext'; // Import useRequests
 
 const Sidebar = ({ onLogout }) => {
   const navigate = useNavigate();
   const { notifications } = useNotification();
+  const { requests, fetchUserRequests } = useRequests(); // Use the RequestContext
   const unreadCount = notifications.filter(n => !n.read).length; // Calculate unread notifications
+  const pendingRequestsCount = requests.filter(r => r.status === 'pending').length; // Calculate pending requests
 
   const handleLogout = () => {
     if (typeof onLogout === 'function') {
@@ -35,6 +39,10 @@ const Sidebar = ({ onLogout }) => {
       console.error('Logout function not provided');
     }
   };
+
+  useEffect(() => {
+    fetchUserRequests(); // Fetch user's join requests
+  }, []);
 
   return (
     <Drawer
@@ -75,6 +83,14 @@ const Sidebar = ({ onLogout }) => {
         <ListItem button component={Link} to="/team">
           <ListItemIcon><GroupIcon /></ListItemIcon>
           <ListItemText primary="Team" />
+        </ListItem>
+        <ListItem button component={Link} to="/join-requests">
+          <ListItemIcon>
+            <Badge badgeContent={pendingRequestsCount} color="error">
+              <RequestIcon />
+            </Badge>
+          </ListItemIcon>
+          <ListItemText primary="Join Requests" />
         </ListItem>
       </List>
       <Divider />

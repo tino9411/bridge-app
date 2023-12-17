@@ -2,11 +2,6 @@ const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
 const notificationSchema = new Schema({
-    user: {
-        type: Schema.Types.ObjectId,
-        required: true,
-        ref: 'User'
-    },
     message: {
         type: String,
         required: true
@@ -22,7 +17,17 @@ const notificationSchema = new Schema({
     type: {
         type: String,
         required: true,
-        enum: ['task', 'milestone', 'project', 'phase', 'comment', 'team', 'user', 'request', 'message']
+        enum: [
+            'task', 
+            'milestone', 
+            'project', 
+            'phase', 
+            'comment', 
+            'team', 
+            'user', 
+            'request',
+            'requestStatus', 
+            'message']
     },
     relatedTo: {
         type: Schema.Types.ObjectId,

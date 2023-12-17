@@ -15,11 +15,9 @@ const router = express.Router();
 router.post('/', authMiddleware, createRequest);
 
 // Route to update the status of a join request
-router.patch('/:requestId/status', authMiddleware, checkProjectManagerRole, updateRequestStatus);
+router.patch('/:requestId/status', authMiddleware, updateRequestStatus);
 
-// Route to get all join requests for a specific user
-router.get('/users/:userId/requests', authMiddleware, checkProjectManagerRole, getUserRequests);
+// Route to get all join requests for a specific user (project manager)
+router.get('/user/:userId', authMiddleware, getUserRequests);
 
 module.exports = router;
-
-

@@ -12,6 +12,7 @@ import Project from './components/project/Project';
 import TaskList from './components/task/TaskList';
 import ProjectList from './components/project/ProjectList';
 import Notification from './components/notification/Notification';
+import JoinRequests from './components/request/JoinRequests'; // Import JoinRequests component
 import { ProjectProvider } from './contexts/ProjectContext';
 import { TeamProvider } from './contexts/TeamContext';
 import { TaskProvider } from './contexts/TaskContext';
@@ -19,6 +20,8 @@ import { CommentProvider } from './contexts/CommentContext';
 import TaskSearch from './components/task/TaskSearch';
 import { SocketProvider } from './contexts/SocketContext';
 import { NotificationProvider } from './contexts/NotificationContext';
+import { RequestProvider } from './contexts/RequestContext';
+import { MessageProvider } from './contexts/MessageContext';
 
 
 const App = () => {
@@ -48,10 +51,9 @@ const App = () => {
 
   return (
     <SocketProvider>
-  
     <ThemeProvider theme={theme}>
-
     <NotificationProvider>
+    <RequestProvider>
     <ProjectProvider>
     <TeamProvider>
     <TaskProvider>
@@ -99,6 +101,12 @@ const App = () => {
           </Layout>
         } />
 
+<Route path="/join-requests" element={
+                          <Layout isAuthenticated={isAuthenticated} onLogout={handleLogout}>
+                            <JoinRequests />
+                          </Layout>
+                        } />
+
         {/* Add more routes as needed */}
       </Routes>
     </Router>
@@ -106,6 +114,7 @@ const App = () => {
     </TaskProvider>
     </TeamProvider>
     </ProjectProvider>
+    </RequestProvider>
      </NotificationProvider>
     </ThemeProvider>
    

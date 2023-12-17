@@ -19,6 +19,6 @@ router.get('/:senderId/:receiverId', authMiddleware, getMessages);
 // Route to mark a message as read
 router.patch('/:messageId/read', authMiddleware, markMessageRead);
 
-router.delete('/:messageId', authMiddleware, deleteMessage);
+router.delete('/:messageId/delete', authMiddleware, deleteMessage);
 
 module.exports = router;

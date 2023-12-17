@@ -91,18 +91,12 @@ const taskSchema = new Schema({
         trim: true
     }],
     history: [historyLogSchema],
-    requestToJoin: [{
-        userId: {
-            type: Schema.Types.ObjectId,
-            ref: 'User'
-        },
-        message: String,
-        status: {
-            type: String,
-            enum: ['pending', 'approved', 'denied'],
-            default: 'pending'
-        }
+
+    relatedRequests: [{
+        type: Schema.Types.ObjectId,
+        ref: 'Request'
     }],
+    
     feedbacks: [{
         userId: {
             type: Schema.Types.ObjectId,
